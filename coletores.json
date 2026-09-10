@@ -8,7 +8,25 @@
       "gateway": "0.0.0.0",
       "dns1": "8.8.8.8",
       "dns2": "8.8.4.4",
-      "senhaWifi": "12345"
+      "senhaWifi": "12345",
+      "plantaId": "planta-padrao"
+    },
+    {
+      "id": 2,
+      "nome": "CHR0001 - Expedição",
+      "serie": "12345678998743",
+      "ip": "172.28.102.1",
+      "plantaId": "planta_1789010097807"
+    }
+  ],
+  "plantas": [
+    {
+      "id": "planta_1789010097807",
+      "nome": "CLP",
+      "gateway": "172.28.103.254",
+      "dns1": "172.28.16.3",
+      "dns2": "172.28.16.2",
+      "senhaWifi": "TDBSK2024@"
     }
   ]
 }

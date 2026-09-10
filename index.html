@@ -153,22 +153,10 @@
             display: inline-block;
         }
 
-        .status-pill.online {
-            color: var(--status-online-text);
-        }
-        .status-pill.online .dot {
-            background-color: var(--status-online-dot);
-            box-shadow: 0 0 6px var(--status-online-dot);
-        }
-
-        .status-pill.offline {
-            color: var(--status-offline-text);
-            border-color: var(--status-offline-dot);
-        }
-        .status-pill.offline .dot {
-            background-color: var(--status-offline-dot);
-            box-shadow: 0 0 6px var(--status-offline-dot);
-        }
+        .status-pill.online { color: var(--status-online-text); }
+        .status-pill.online .dot { background-color: var(--status-online-dot); box-shadow: 0 0 6px var(--status-online-dot); }
+        .status-pill.offline { color: var(--status-offline-text); border-color: var(--status-offline-dot); }
+        .status-pill.offline .dot { background-color: var(--status-offline-dot); box-shadow: 0 0 6px var(--status-offline-dot); }
 
         .btn { padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary { background: #7c3aed; color: white; }
@@ -207,16 +195,39 @@
         
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 4px; }
-        .form-group input { width: 100%; padding: 9px 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
-        .form-group input:focus { outline: 2px solid #7c3aed; border-color: transparent; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
+        .form-group input:focus, .form-group select:focus { outline: 2px solid #7c3aed; border-color: transparent; }
         
+        .select-with-button {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+        .select-with-button select {
+            flex: 1;
+        }
+        .select-with-button button {
+            white-space: nowrap;
+            padding: 0 14px;
+        }
+
         .dados-coletor { background: var(--bg-dados); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px var(--shadow-subtle); margin-top: 10px; border: 1px solid var(--border-item); }
         .dados-coletor .campo { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-item); }
         .dados-coletor .campo:last-child { border-bottom: none; }
         .dados-coletor .rotulo { font-weight: 500; color: var(--text-label); }
         .dados-coletor .valor { font-weight: 600; color: var(--text-main); word-break: break-all; text-align: right; max-width: 65%; }
         
+        .planta-preview-box {
+            background: var(--bg-panel);
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
         .qr-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
@@ -279,6 +290,52 @@
             margin-top: 10px;
         }
 
+        /* Modal de Plantas */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 15px 35px var(--shadow);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .plantas-lista {
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+        .planta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
         .footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; color: var(--text-muted); font-size: 13px; }
     </style>
 </head>
@@ -297,7 +354,6 @@
 
         <div class="top-controls">
             <button id="btnTema" class="btn btn-outline btn-sm" onclick="alternarTema()">🌙 Tema Escuro</button>
-            <button class="btn btn-outline btn-sm" onclick="location.reload();">🔄 Recarregar</button>
             <button class="btn btn-outline btn-sm" onclick="criarAtalho()">
                 <img src="icone.ico" class="btn-icon-img" alt="Ícone" onerror="this.outerHTML='🖥️'"> Criar Atalho
             </button>
@@ -318,6 +374,7 @@
     </div>
 
     <div class="grid-2">
+        <!-- Detalhes do Coletor -->
         <div class="card">
             <h2>
                 📋 Dados do Coletor
@@ -329,6 +386,7 @@
                     <div class="dados-coletor">
                         <div class="campo"><span class="rotulo">Nome</span><span class="valor" id="exNome">-</span></div>
                         <div class="campo"><span class="rotulo">Nº de Série</span><span class="valor" id="exSerie">-</span></div>
+                        <div class="campo"><span class="rotulo">Planta / Unidade</span><span class="valor" id="exPlanta">-</span></div>
                         <div class="campo"><span class="rotulo">IP</span><span class="valor" id="exIP">-</span></div>
                         <div class="campo"><span class="rotulo">Gateway</span><span class="valor" id="exGateway">-</span></div>
                         <div class="campo"><span class="rotulo">DNS 1</span><span class="valor" id="exDNS1">-</span></div>
@@ -347,6 +405,7 @@
             </div>
         </div>
 
+        <!-- Formulário Simplificado de Coletor -->
         <div class="card">
             <h2>
                 <span id="formTitulo">➕ Novo Coletor</span>
@@ -361,31 +420,25 @@
                     <label for="fNome">Nome do Dispositivo *</label>
                     <input type="text" id="fNome" placeholder="CHR0001 - Estoque A" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fIP">IP *</label>
-                        <input type="text" id="fIP" placeholder="192.168.1.100" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fGateway">Gateway *</label>
-                        <input type="text" id="fGateway" placeholder="192.168.1.1" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="fDNS1">DNS 1 *</label>
-                        <input type="text" id="fDNS1" placeholder="8.8.8.8" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fDNS2">DNS 2</label>
-                        <input type="text" id="fDNS2" placeholder="8.8.4.4">
-                    </div>
-                </div>
                 <div class="form-group">
-                    <label for="fSenha">Senha Wi-Fi *</label>
-                    <input type="text" id="fSenha" placeholder="senha123" required>
+                    <label for="fIP">IP do Equipamento *</label>
+                    <input type="text" id="fIP" placeholder="192.168.1.100" required>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                
+                <div class="form-group">
+                    <label for="fPlanta">Planta / Unidade de Rede *</label>
+                    <div class="select-with-button">
+                        <select id="fPlanta" required onchange="atualizarPreviewPlanta()">
+                            <option value="">Selecione uma planta cadastrada...</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalPlantas()" title="Cadastrar ou editar plantas">
+                            🏢 + Nova Planta
+                        </button>
+                    </div>
+                    <div id="plantaPreview" class="planta-preview-box hidden"></div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">
                     <button type="submit" class="btn btn-success" id="btnSalvar">💾 Salvar</button>
                     <button type="button" class="btn btn-outline" onclick="cancelarEdicao()">Cancelar</button>
                 </div>
@@ -402,8 +455,49 @@
     </div>
 </div>
 
+<!-- MODAL: Gerenciador de Plantas -->
+<div id="modalPlantas" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-size:18px;">🏢 Cadastro de Plantas & Redes</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalPlantas()">✖</button>
+        </div>
+
+        <form id="formPlanta" onsubmit="salvarPlanta(event)">
+            <div class="form-group">
+                <label for="pNome">Nome da Planta / Filial *</label>
+                <input type="text" id="pNome" placeholder="Ex: Matriz - Sorocaba" required>
+            </div>
+            <div class="form-group">
+                <label for="pGateway">Gateway *</label>
+                <input type="text" id="pGateway" placeholder="192.168.1.1" required>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label for="pDNS1">DNS 1 *</label>
+                    <input type="text" id="pDNS1" placeholder="8.8.8.8" required>
+                </div>
+                <div class="form-group">
+                    <label for="pDNS2">DNS 2</label>
+                    <input type="text" id="pDNS2" placeholder="8.8.4.4">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="pSenha">Senha Wi-Fi *</label>
+                <input type="text" id="pSenha" placeholder="Senha da rede local" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">💾 Cadastrar / Atualizar Planta</button>
+        </form>
+
+        <div class="plantas-lista">
+            <h4 style="font-size:14px; margin-bottom:10px;">Plantas Cadastradas:</h4>
+            <div id="listaPlantasContainer"></div>
+        </div>
+    </div>
+</div>
+
 <script>
-    let dados = { coletores: [] };
+    let dados = { coletores: [], plantas: [] };
     let editandoSerie = null;
     let ultimoId = 0;
 
@@ -469,10 +563,30 @@
             const response = await fetch('coletores.json', { cache: 'no-store' });
             if (!response.ok) throw new Error('Servidor não respondeu com sucesso');
             dados = await response.json();
-            if (!dados.coletores || !Array.isArray(dados.coletores)) {
-                dados.coletores = [];
-            }
+            
+            if (!dados.coletores || !Array.isArray(dados.coletores)) dados.coletores = [];
+            if (!dados.plantas || !Array.isArray(dados.plantas)) dados.plantas = [];
 
+            dados.coletores.forEach(c => {
+                if (!c.plantaId && (c.gateway || c.senhaWifi)) {
+                    const plantaNomeLegada = "Planta Legada Padrão";
+                    let plantaExistente = dados.plantas.find(p => p.nome === plantaNomeLegada);
+                    if (!plantaExistente) {
+                        plantaExistente = {
+                            id: 'planta-padrao',
+                            nome: plantaNomeLegada,
+                            gateway: c.gateway || '',
+                            dns1: c.dns1 || '8.8.8.8',
+                            dns2: c.dns2 || '',
+                            senhaWifi: c.senhaWifi || ''
+                        };
+                        dados.plantas.push(plantaExistente);
+                    }
+                    c.plantaId = plantaExistente.id;
+                }
+            });
+
+            popularSelectPlantas();
             atualizarUltimoId();
             atualizarTotal();
             atualizarStatusServidor(true);
@@ -522,20 +636,22 @@
         return dados.coletores.find(c => String(c.serie).trim() === alvo);
     }
 
+    function encontrarPlanta(plantaId) {
+        if (!dados.plantas || !plantaId) return null;
+        return dados.plantas.find(p => p.id === plantaId);
+    }
+
     function normalizarTexto(str) {
         return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
 
-    // Busca inteligente por Série exata OU Nome parcial
     function filtrarColetores(termo) {
         if (!dados.coletores || !termo) return [];
         const termoNorm = normalizarTexto(termo);
 
-        // 1º: Tenta correspondência exata de Série
         const exatoSerie = dados.coletores.filter(c => normalizarTexto(c.serie) === termoNorm);
         if (exatoSerie.length > 0) return exatoSerie;
 
-        // 2º: Busca parcial no Nome ou Série
         return dados.coletores.filter(c => {
             const nomeNorm = normalizarTexto(c.nome);
             const serieNorm = normalizarTexto(c.serie);
@@ -609,7 +725,6 @@
             mostrarMensagem(`Nenhum coletor encontrado com "${termo}". Preencha o formulário ao lado para cadastrar.`, 'info');
             cancelarEdicao();
 
-            // Se digitou 14 números, preenche automaticamente no campo de série
             if (/^\d{14}$/.test(termo)) {
                 document.getElementById('fSerie').value = termo;
             } else {
@@ -623,14 +738,22 @@
     }
 
     function exibirColetor(coletor) {
+        const planta = encontrarPlanta(coletor.plantaId);
+
         document.getElementById('exNome').textContent = coletor.nome || '-';
         document.getElementById('exSerie').textContent = coletor.serie;
+        document.getElementById('exPlanta').textContent = planta ? planta.nome : 'Não definida';
         document.getElementById('exIP').textContent = coletor.ip || '-';
-        const gateway = coletor.gateway || coletor.mascara || '-';
+
+        const gateway = planta ? planta.gateway : (coletor.gateway || '-');
+        const dns1 = planta ? planta.dns1 : (coletor.dns1 || '-');
+        const dns2 = planta ? planta.dns2 : (coletor.dns2 || '-');
+        const senhaWifi = planta ? planta.senhaWifi : (coletor.senhaWifi || '-');
+
         document.getElementById('exGateway').textContent = gateway;
-        document.getElementById('exDNS1').textContent = coletor.dns1 || '-';
-        document.getElementById('exDNS2').textContent = coletor.dns2 || '-';
-        document.getElementById('exSenha').textContent = coletor.senhaWifi || '-';
+        document.getElementById('exDNS1').textContent = dns1;
+        document.getElementById('exDNS2').textContent = dns2;
+        document.getElementById('exSenha').textContent = senhaWifi;
 
         const grid = document.getElementById('qrGrid');
         grid.innerHTML = '';
@@ -639,9 +762,9 @@
             { label: 'Nome', valor: coletor.nome || '-' },
             { label: 'IP', valor: coletor.ip || '-' },
             { label: 'Gateway', valor: gateway },
-            { label: 'DNS 1', valor: coletor.dns1 || '-' },
-            { label: 'DNS 2', valor: coletor.dns2 || '-' },
-            { label: 'Senha Wi-Fi', valor: coletor.senhaWifi || '-' }
+            { label: 'DNS 1', valor: dns1 },
+            { label: 'DNS 2', valor: dns2 },
+            { label: 'Senha Wi-Fi', valor: senhaWifi }
         ];
 
         const isDark = document.body.classList.contains('dark-mode');
@@ -669,15 +792,46 @@
         document.getElementById('dadosExibicao').dataset.serie = coletor.serie;
     }
 
+    function popularSelectPlantas(selecionarId = null) {
+        const select = document.getElementById('fPlanta');
+        const valorAtual = selecionarId || select.value;
+        select.innerHTML = '<option value="">Selecione uma planta cadastrada...</option>';
+
+        dados.plantas.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nome;
+            select.appendChild(opt);
+        });
+
+        if (valorAtual) select.value = valorAtual;
+        atualizarPreviewPlanta();
+    }
+
+    function atualizarPreviewPlanta() {
+        const plantaId = document.getElementById('fPlanta').value;
+        const box = document.getElementById('plantaPreview');
+        if (!plantaId) {
+            box.classList.add('hidden');
+            box.innerHTML = '';
+            return;
+        }
+
+        const planta = encontrarPlanta(plantaId);
+        if (planta) {
+            box.innerHTML = `<strong>Rede vinculada:</strong> Gateway: ${planta.gateway} | DNS1: ${planta.dns1} | Wi-Fi: ${planta.senhaWifi}`;
+            box.classList.remove('hidden');
+        }
+    }
+
     function preencherFormularioEdicao(coletor) {
         document.getElementById('fSerie').value = coletor.serie;
         document.getElementById('fSerie').disabled = true;
         document.getElementById('fNome').value = coletor.nome || '';
         document.getElementById('fIP').value = coletor.ip || '';
-        document.getElementById('fGateway').value = coletor.gateway || coletor.mascara || '';
-        document.getElementById('fDNS1').value = coletor.dns1 || '';
-        document.getElementById('fDNS2').value = coletor.dns2 || '';
-        document.getElementById('fSenha').value = coletor.senhaWifi || '';
+        document.getElementById('fPlanta').value = coletor.plantaId || '';
+        atualizarPreviewPlanta();
+
         editandoSerie = String(coletor.serie).trim();
         document.getElementById('formTitulo').textContent = '✏️ Editar Coletor';
         document.getElementById('formBadge').textContent = 'Edição';
@@ -699,6 +853,7 @@
         document.getElementById('formBadge').textContent = 'Cadastro';
         document.getElementById('btnSalvar').textContent = '💾 Salvar';
         document.getElementById('formMensagem').classList.add('hidden');
+        atualizarPreviewPlanta();
     }
 
     async function salvarColetor(event) {
@@ -707,13 +862,15 @@
         const serie = document.getElementById('fSerie').value.trim();
         const nome = document.getElementById('fNome').value.trim();
         const ip = document.getElementById('fIP').value.trim();
-        const gateway = document.getElementById('fGateway').value.trim();
-        const dns1 = document.getElementById('fDNS1').value.trim();
-        const dns2 = document.getElementById('fDNS2').value.trim();
-        const senha = document.getElementById('fSenha').value.trim();
+        const plantaId = document.getElementById('fPlanta').value;
 
         if (serie.length !== 14 || !/^\d{14}$/.test(serie)) {
             mostrarMensagemForm('Série deve ter 14 dígitos numéricos.', 'error');
+            return;
+        }
+
+        if (!plantaId) {
+            mostrarMensagemForm('Selecione a Planta para vincular as configurações de rede.', 'error');
             return;
         }
 
@@ -725,7 +882,10 @@
 
         const coletor = {
             id: existente ? existente.id : (ultimoId + 1),
-            nome, serie, ip, gateway, dns1, dns2: dns2 || '', senhaWifi: senha
+            nome,
+            serie,
+            ip,
+            plantaId
         };
 
         if (editandoSerie !== null) {
@@ -769,6 +929,90 @@
         el.textContent = texto;
         el.className = `msg msg-${tipo}`;
         el.classList.remove('hidden');
+    }
+
+    // ==========================================
+    //  GERENCIAMENTO DE PLANTAS (MODAL)
+    // ==========================================
+    function abrirModalPlantas() {
+        document.getElementById('modalPlantas').classList.remove('hidden');
+        renderizarListaPlantas();
+    }
+
+    function fecharModalPlantas() {
+        document.getElementById('modalPlantas').classList.add('hidden');
+        document.getElementById('formPlanta').reset();
+    }
+
+    function renderizarListaPlantas() {
+        const container = document.getElementById('listaPlantasContainer');
+        container.innerHTML = '';
+
+        if (!dados.plantas || dados.plantas.length === 0) {
+            container.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Nenhuma planta cadastrada ainda.</span>';
+            return;
+        }
+
+        dados.plantas.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'planta-item';
+            div.innerHTML = `
+                <div>
+                    <strong>${p.nome}</strong><br>
+                    <span style="font-size:11px; color:var(--text-muted);">GW: ${p.gateway} | DNS: ${p.dns1} | Wi-Fi: ${p.senhaWifi}</span>
+                </div>
+                <div>
+                    <button class="btn btn-danger btn-sm" onclick="excluirPlanta('${p.id}')">🗑️</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    async function salvarPlanta(event) {
+        event.preventDefault();
+        const nome = document.getElementById('pNome').value.trim();
+        const gateway = document.getElementById('pGateway').value.trim();
+        const dns1 = document.getElementById('pDNS1').value.trim();
+        const dns2 = document.getElementById('pDNS2').value.trim();
+        const senhaWifi = document.getElementById('pSenha').value.trim();
+
+        if (!nome || !gateway || !dns1 || !senhaWifi) {
+            alert('Preencha os campos obrigatórios da Planta.');
+            return;
+        }
+
+        const novaPlanta = {
+            id: 'planta_' + Date.now(),
+            nome,
+            gateway,
+            dns1,
+            dns2,
+            senhaWifi
+        };
+
+        dados.plantas.push(novaPlanta);
+        await persistirNoServidor();
+        document.getElementById('formPlanta').reset();
+        popularSelectPlantas(novaPlanta.id);
+        renderizarListaPlantas();
+        fecharModalPlantas();
+    }
+
+    async function excluirPlanta(id) {
+        const vinculados = dados.coletores.filter(c => c.plantaId === id).length;
+        if (vinculados > 0) {
+            if (!confirm(`Existem ${vinculados} coletor(es) vinculados a esta planta. Deseja realmente excluir?`)) {
+                return;
+            }
+        } else {
+            if (!confirm('Deseja excluir esta planta?')) return;
+        }
+
+        dados.plantas = dados.plantas.filter(p => p.id !== id);
+        await persistirNoServidor();
+        popularSelectPlantas();
+        renderizarListaPlantas();
     }
 
     async function criarAtalho() {
