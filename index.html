@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Coletores</title>
+    <link rel="icon" type="image/x-icon" href="icone.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-body: #f3edf7;
+            --bg-container: #ffffff;
+            --bg-card: #faf8ff;
+            --bg-panel: #f5f0ff;
+            --bg-dados: #ffffff;
+            --border-color: #d1c4e9;
+            --border-item: #ede7f6;
+            --text-main: #2d1b4e;
+            --text-muted: #7b5a9b;
+            --text-label: #4a2a6b;
+            --input-bg: #ffffff;
+            --input-border: #d1c4e9;
+            --btn-outline-text: #4a2a6b;
+            --btn-outline-border: #b39ddb;
+            --btn-outline-hover: #ede7f6;
+            --shadow: rgba(106, 27, 154, 0.15);
+            --shadow-subtle: rgba(106, 27, 154, 0.08);
+
+            /* Cores da pill de status (Tema Claro) */
+            --status-bg: #f5f0ff;
+            --status-border: #d1c4e9;
+            --status-online-text: #1b5e20;
+            --status-online-dot: #2e7d32;
+            --status-offline-text: #b71c1c;
+            --status-offline-dot: #d32f2f;
+        }
+
+        body.dark-mode {
+            --bg-body: #100a1c;
+            --bg-container: #1b122c;
+            --bg-card: #231738;
+            --bg-panel: #201435;
+            --bg-dados: #281940;
+            --border-color: #432b68;
+            --border-item: #331f50;
+            --text-main: #f1ebfa;
+            --text-muted: #bda2df;
+            --text-label: #d3bdf2;
+            --input-bg: #2b1b46;
+            --input-border: #4d3375;
+            --btn-outline-text: #d8c2fa;
+            --btn-outline-border: #5e3f8f;
+            --btn-outline-hover: #321e52;
+            --shadow: rgba(0, 0, 0, 0.45);
+            --shadow-subtle: rgba(0, 0, 0, 0.25);
+
+            /* Cores da pill de status (Tema Escuro conforme a imagem de referência) */
+            --status-bg: #1c152a;
+            --status-border: #3d2a58;
+            --status-online-text: #5af5ad;
+            --status-online-dot: #5af5ad;
+            --status-offline-text: #ff6b8b;
+            --status-offline-dot: #ff6b8b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+        body { background: var(--bg-body); padding: 15px 25px; display: flex; justify-content: center; color: var(--text-main); }
+        
+        .container { 
+            max-width: 96%; 
+            width: 100%; 
+            background: var(--bg-container); 
+            border-radius: 20px; 
+            padding: 25px 35px; 
+            box-shadow: 0 10px 40px var(--shadow); 
+            border: 1px solid var(--border-color); 
+        }
+        
+        /* Topo dividido em 3 colunas: Logo (esquerda) | Título (centro) | Controles (direita) */
+        .header-top {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 992px) {
+            .header-top {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .company-logo { 
+            height: 48px; 
+            max-width: 190px; 
+            object-fit: contain; 
+        }
+
+        .header-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        h1 { 
+            font-size: 24px; 
+            color: var(--text-main); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            margin-bottom: 0; 
+            white-space: nowrap;
+        }
+        h1 small { font-size: 13px; font-weight: 400; color: var(--text-muted); display: block; }
+
+        .top-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Pill de status (Não-clicável) */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            border-radius: 24px;
+            background: var(--status-bg);
+            border: 1px solid var(--status-border);
+            font-size: 13px;
+            font-weight: 700;
+            user-select: none;
+            cursor: default;
+        }
+
+        .status-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-pill.online {
+            color: var(--status-online-text);
+        }
+        .status-pill.online .dot {
+            background-color: var(--status-online-dot);
+            box-shadow: 0 0 6px var(--status-online-dot);
+        }
+
+        .status-pill.offline {
+            color: var(--status-offline-text);
+            border-color: var(--status-offline-dot);
+        }
+        .status-pill.offline .dot {
+            background-color: var(--status-offline-dot);
+            box-shadow: 0 0 6px var(--status-offline-dot);
+        }
+
+        .btn { padding: 8px 18px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #7c3aed; color: white; }
+        .btn-primary:hover { background: #6d28d9; transform: scale(1.02); }
+        .btn-success { background: #8b5cf6; color: white; }
+        .btn-success:hover { background: #7c3aed; transform: scale(1.02); }
+        .btn-warning { background: #a78bfa; color: #1a102b; }
+        .btn-warning:hover { background: #8b5cf6; color: white; transform: scale(1.02); }
+        .btn-outline { background: transparent; border: 1px solid var(--btn-outline-border); color: var(--btn-outline-text); }
+        .btn-outline:hover { background: var(--btn-outline-hover); }
+        .btn-danger { background: #e879a8; color: white; }
+        .btn-danger:hover { background: #d45a8a; transform: scale(1.02); }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+        .btn-icon-img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: var(--bg-panel); padding: 12px 18px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .top-bar label { font-weight: 600; color: var(--text-main); }
+        .top-bar input[type="text"] { flex: 1; min-width: 250px; padding: 9px 14px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
+        .top-bar input:focus { outline: 2px solid #7c3aed; border-color: transparent; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 25px; margin-top: 5px; }
+        @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--bg-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color); }
+        .card h2 { font-size: 18px; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .badge { font-size: 12px; background: var(--border-color); padding: 2px 12px; border-radius: 20px; font-weight: 500; color: var(--text-main); }
+        .badge-success { background: #8b5cf6; color: white; }
+        .badge-danger { background: #e879a8; color: white; }
+        
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 4px; }
+        .form-group input { width: 100%; padding: 9px 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
+        .form-group input:focus { outline: 2px solid #7c3aed; border-color: transparent; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        
+        .dados-coletor { background: var(--bg-dados); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px var(--shadow-subtle); margin-top: 10px; border: 1px solid var(--border-item); }
+        .dados-coletor .campo { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-item); }
+        .dados-coletor .campo:last-child { border-bottom: none; }
+        .dados-coletor .rotulo { font-weight: 500; color: var(--text-label); }
+        .dados-coletor .valor { font-weight: 600; color: var(--text-main); word-break: break-all; text-align: right; max-width: 65%; }
+        
+        .qr-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 16px; 
+            margin-top: 15px; 
+        }
+        @media (max-width: 650px) {
+            .qr-grid { grid-template-columns: 1fr; }
+        }
+
+        .qr-item { 
+            background: var(--bg-dados); 
+            padding: 16px 10px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 225px; 
+            width: 100%; 
+        }
+        .qr-item .label { 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: var(--text-label); 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            margin-bottom: 12px; 
+            text-align: center; 
+        }
+        .qr-item .qr-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+            min-height: 150px; 
+        }
+        .qr-item .qr-container canvas, 
+        .qr-item .qr-container img { 
+            width: 145px !important; 
+            height: 145px !important; 
+            display: block; 
+        }
+        
+        .hidden { display: none !important; }
+        .msg { padding: 10px 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
+        .msg-info { background: #ede7f6; color: #2d1b4e; }
+        .msg-success { background: #e8d5ff; color: #2d1b4e; }
+        .msg-error { background: #fce4ec; color: #7a2b4a; }
+        
+        body.dark-mode .msg-info { background: #2f2048; color: #dfcefc; }
+        body.dark-mode .msg-success { background: #3b2359; color: #f0e3ff; }
+        body.dark-mode .msg-error { background: #481d32; color: #ffb8d6; }
+
+        .footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-top">
+        <div class="header-left">
+            <img id="logoEmpresa" class="company-logo" src="logo-roxo.png" alt="Logo da Empresa" onerror="this.style.display='none'">
+        </div>
+
+        <div class="header-center">
+            <h1>📡 Central de Coletores</h1>
+            <small>Gerenciamento Integrado</small>
+        </div>
+
+        <div class="top-controls">
+            <button id="btnTema" class="btn btn-outline btn-sm" onclick="alternarTema()">🌙 Tema Escuro</button>
+            <button class="btn btn-outline btn-sm" onclick="location.reload();">🔄 Recarregar</button>
+            <button class="btn btn-outline btn-sm" onclick="criarAtalho()">
+                <img src="icone.ico" class="btn-icon-img" alt="Ícone" onerror="this.outerHTML='🖥️'"> Criar Atalho
+            </button>
+            
+            <!-- Botão não-clicável de status -->
+            <div id="statusServidorPill" class="status-pill online">
+                <span class="dot"></span>
+                <span id="statusServidorTexto">Servidor local ativo</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <label for="buscaSerie">🔍 Nº de Série (14 dígitos):</label>
+        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234" maxlength="14" inputmode="numeric" onkeydown="if(event.key==='Enter') buscarColetor()">
+        <button class="btn btn-primary" onclick="buscarColetor()">Buscar</button>
+        <button class="btn btn-outline" onclick="limparBusca()">Limpar</button>
+        <span style="font-size:13px; color:var(--text-muted);" id="totalInfo">Total: 0</span>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h2>
+                📋 Dados do Coletor
+                <span class="badge" id="statusBadge">Nenhum</span>
+            </h2>
+            <div id="resultadoContainer">
+                <div id="mensagemResultado" class="msg msg-info" style="display:none;"></div>
+                <div id="dadosExibicao" class="hidden">
+                    <div class="dados-coletor">
+                        <div class="campo"><span class="rotulo">Nome</span><span class="valor" id="exNome">-</span></div>
+                        <div class="campo"><span class="rotulo">Nº de Série</span><span class="valor" id="exSerie">-</span></div>
+                        <div class="campo"><span class="rotulo">IP</span><span class="valor" id="exIP">-</span></div>
+                        <div class="campo"><span class="rotulo">Gateway</span><span class="valor" id="exGateway">-</span></div>
+                        <div class="campo"><span class="rotulo">DNS 1</span><span class="valor" id="exDNS1">-</span></div>
+                        <div class="campo"><span class="rotulo">DNS 2</span><span class="valor" id="exDNS2">-</span></div>
+                        <div class="campo"><span class="rotulo">Senha Wi-Fi</span><span class="valor" id="exSenha">-</span></div>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <div style="font-weight:600; font-size:14px; color:var(--text-main);">📲 QR Codes para configuração</div>
+                        <div class="qr-grid" id="qrGrid"></div>
+                    </div>
+                    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-warning btn-sm" onclick="editarColetor()">✏️ Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirColetor()">🗑️ Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>
+                <span id="formTitulo">➕ Novo Coletor</span>
+                <span class="badge" id="formBadge">Cadastro</span>
+            </h2>
+            <form id="formColetor" onsubmit="salvarColetor(event)">
+                <div class="form-group">
+                    <label for="fSerie">Nº de Série (14 dígitos) *</label>
+                    <input type="text" id="fSerie" maxlength="14" inputmode="numeric" placeholder="12345678901234" required>
+                </div>
+                <div class="form-group">
+                    <label for="fNome">Nome do Dispositivo *</label>
+                    <input type="text" id="fNome" placeholder="CHR0001 - Estoque A" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fIP">IP *</label>
+                        <input type="text" id="fIP" placeholder="192.168.1.100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fGateway">Gateway *</label>
+                        <input type="text" id="fGateway" placeholder="192.168.1.1" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fDNS1">DNS 1 *</label>
+                        <input type="text" id="fDNS1" placeholder="8.8.8.8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fDNS2">DNS 2</label>
+                        <input type="text" id="fDNS2" placeholder="8.8.4.4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="fSenha">Senha Wi-Fi *</label>
+                    <input type="text" id="fSenha" placeholder="senha123" required>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    <button type="submit" class="btn btn-success" id="btnSalvar">💾 Salvar</button>
+                    <button type="button" class="btn btn-outline" onclick="cancelarEdicao()">Cancelar</button>
+                </div>
+                <div id="formMensagem" class="msg hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Total de coletores: <strong id="totalColetores">0</strong></span>
+        <span style="font-size:12px; color:var(--text-muted);">
+            💾 Sincronização automática em tempo real
+        </span>
+    </div>
+</div>
+
+<script>
+    let dados = { coletores: [] };
+    let editandoSerie = null;
+    let ultimoId = 0;
+
+    function atualizarStatusServidor(online) {
+        const pill = document.getElementById('statusServidorPill');
+        const texto = document.getElementById('statusServidorTexto');
+
+        if (online) {
+            pill.className = 'status-pill online';
+            texto.textContent = 'Servidor local ativo';
+        } else {
+            pill.className = 'status-pill offline';
+            texto.textContent = 'Servidor offline';
+        }
+    }
+
+    function aplicarTema(dark) {
+        const btn = document.getElementById('btnTema');
+        const logo = document.getElementById('logoEmpresa');
+
+        if (dark) {
+            document.body.classList.add('dark-mode');
+            btn.innerHTML = '☀️ Tema Claro';
+            if (logo) {
+                logo.src = 'logo-branco.png';
+                logo.style.display = 'block';
+            }
+            localStorage.setItem('tema_central', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            btn.innerHTML = '🌙 Tema Escuro';
+            if (logo) {
+                logo.src = 'logo-roxo.png';
+                logo.style.display = 'block';
+            }
+            localStorage.setItem('tema_central', 'light');
+        }
+
+        const serieExibida = document.getElementById('dadosExibicao').dataset.serie;
+        if (serieExibida) {
+            const coletor = encontrarColetor(serieExibida);
+            if (coletor) exibirColetor(coletor);
+        }
+    }
+
+    function alternarTema() {
+        const isDark = document.body.classList.contains('dark-mode');
+        aplicarTema(!isDark);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const salvo = localStorage.getItem('tema_central');
+        if (salvo === 'dark') {
+            aplicarTema(true);
+        } else {
+            aplicarTema(false);
+        }
+        carregarColetores();
+    });
+
+    async function carregarColetores() {
+        try {
+            const response = await fetch('coletores.json', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Servidor não respondeu com sucesso');
+            dados = await response.json();
+            if (!dados.coletores || !Array.isArray(dados.coletores)) {
+                dados.coletores = [];
+            }
+
+            atualizarUltimoId();
+            atualizarTotal();
+            atualizarStatusServidor(true);
+        } catch (e) {
+            console.error(e);
+            atualizarStatusServidor(false);
+            mostrarMensagem('O servidor local está offline ou inacessível.', 'error');
+        }
+    }
+
+    async function persistirNoServidor() {
+        try {
+            const response = await fetch('coletores.json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify(dados, null, 2)
+            });
+            if (!response.ok) throw new Error('Falha ao salvar');
+            
+            atualizarStatusServidor(true);
+            return true;
+        } catch (e) {
+            console.error(e);
+            atualizarStatusServidor(false);
+            return false;
+        }
+    }
+
+    function atualizarUltimoId() {
+        if (!dados.coletores || dados.coletores.length === 0) {
+            ultimoId = 0;
+            return;
+        }
+        const ids = dados.coletores.map(c => Number(c.id) || 0);
+        ultimoId = Math.max(...ids, 0);
+    }
+
+    function atualizarTotal() {
+        const total = dados.coletores ? dados.coletores.length : 0;
+        document.getElementById('totalColetores').textContent = total;
+        document.getElementById('totalInfo').textContent = `Total: ${total}`;
+    }
+
+    function encontrarColetor(serie) {
+        if (!dados.coletores || !serie) return null;
+        const alvo = String(serie).trim();
+        return dados.coletores.find(c => String(c.serie).trim() === alvo);
+    }
+
+    function mostrarMensagem(texto, tipo = 'info') {
+        const el = document.getElementById('mensagemResultado');
+        el.textContent = texto;
+        el.className = `msg msg-${tipo}`;
+        el.style.display = 'block';
+    }
+
+    function limparBusca() {
+        document.getElementById('buscaSerie').value = '';
+        document.getElementById('dadosExibicao').classList.add('hidden');
+        document.getElementById('dadosExibicao').dataset.serie = '';
+        document.getElementById('mensagemResultado').style.display = 'none';
+        document.getElementById('statusBadge').textContent = 'Nenhum';
+        document.getElementById('statusBadge').className = 'badge';
+        cancelarEdicao();
+    }
+
+    function buscarColetor() {
+        const input = document.getElementById('buscaSerie');
+        const serie = input.value.trim();
+
+        if (!serie) {
+            mostrarMensagem('Digite um número de série.', 'info');
+            return;
+        }
+
+        const coletor = encontrarColetor(serie);
+        if (coletor) {
+            exibirColetor(coletor);
+            document.getElementById('statusBadge').textContent = 'Encontrado';
+            document.getElementById('statusBadge').className = 'badge badge-success';
+            document.getElementById('mensagemResultado').style.display = 'none';
+            preencherFormularioEdicao(coletor);
+        } else {
+            document.getElementById('dadosExibicao').classList.add('hidden');
+            document.getElementById('dadosExibicao').dataset.serie = '';
+            document.getElementById('statusBadge').textContent = 'Não encontrado';
+            document.getElementById('statusBadge').className = 'badge badge-danger';
+            mostrarMensagem(`Série ${serie} não cadastrada. Preencha o formulário para cadastrar.`, 'info');
+            cancelarEdicao();
+            document.getElementById('fSerie').value = serie;
+        }
+    }
+
+    function removerAcentos(str) {
+        return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function exibirColetor(coletor) {
+        document.getElementById('exNome').textContent = coletor.nome || '-';
+        document.getElementById('exSerie').textContent = coletor.serie;
+        document.getElementById('exIP').textContent = coletor.ip || '-';
+        const gateway = coletor.gateway || coletor.mascara || '-';
+        document.getElementById('exGateway').textContent = gateway;
+        document.getElementById('exDNS1').textContent = coletor.dns1 || '-';
+        document.getElementById('exDNS2').textContent = coletor.dns2 || '-';
+        document.getElementById('exSenha').textContent = coletor.senhaWifi || '-';
+
+        const grid = document.getElementById('qrGrid');
+        grid.innerHTML = '';
+
+        const campos = [
+            { label: 'Nome', valor: coletor.nome || '-' },
+            { label: 'IP', valor: coletor.ip || '-' },
+            { label: 'Gateway', valor: gateway },
+            { label: 'DNS 1', valor: coletor.dns1 || '-' },
+            { label: 'DNS 2', valor: coletor.dns2 || '-' },
+            { label: 'Senha Wi-Fi', valor: coletor.senhaWifi || '-' }
+        ];
+
+        const isDark = document.body.classList.contains('dark-mode');
+        const corDark = isDark ? '#f5eeff' : '#2d1b4e';
+        const corLight = isDark ? '#281940' : '#ffffff';
+
+        campos.forEach((campo, i) => {
+            const item = document.createElement('div');
+            item.className = 'qr-item';
+            const id = `qr-${i}`;
+            item.innerHTML = `<div class="label">${campo.label}</div><div class="qr-container" id="${id}"></div>`;
+            grid.appendChild(item);
+
+            new QRCode(document.getElementById(id), {
+                text: removerAcentos(campo.valor),
+                width: 145,
+                height: 145,
+                colorDark: corDark,
+                colorLight: corLight,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+
+        document.getElementById('dadosExibicao').classList.remove('hidden');
+        document.getElementById('dadosExibicao').dataset.serie = coletor.serie;
+    }
+
+    function preencherFormularioEdicao(coletor) {
+        document.getElementById('fSerie').value = coletor.serie;
+        document.getElementById('fSerie').disabled = true;
+        document.getElementById('fNome').value = coletor.nome || '';
+        document.getElementById('fIP').value = coletor.ip || '';
+        document.getElementById('fGateway').value = coletor.gateway || coletor.mascara || '';
+        document.getElementById('fDNS1').value = coletor.dns1 || '';
+        document.getElementById('fDNS2').value = coletor.dns2 || '';
+        document.getElementById('fSenha').value = coletor.senhaWifi || '';
+        editandoSerie = String(coletor.serie).trim();
+        document.getElementById('formTitulo').textContent = '✏️ Editar Coletor';
+        document.getElementById('formBadge').textContent = 'Edição';
+        document.getElementById('btnSalvar').textContent = '💾 Atualizar';
+        document.getElementById('formMensagem').classList.add('hidden');
+    }
+
+    function editarColetor() {
+        const serie = document.getElementById('dadosExibicao').dataset.serie;
+        const coletor =找到 = encontrarColetor(serie);
+        if (coletor) preencherFormularioEdicao(coletor);
+    }
+
+    function cancelarEdicao() {
+        editandoSerie = null;
+        document.getElementById('fSerie').disabled = false;
+        document.getElementById('formColetor').reset();
+        document.getElementById('formTitulo').textContent = '➕ Novo Coletor';
+        document.getElementById('formBadge').textContent = 'Cadastro';
+        document.getElementById('btnSalvar').textContent = '💾 Salvar';
+        document.getElementById('formMensagem').classList.add('hidden');
+    }
+
+    async function salvarColetor(event) {
+        event.preventDefault();
+
+        const serie = document.getElementById('fSerie').value.trim();
+        const nome = document.getElementById('fNome').value.trim();
+        const ip = document.getElementById('fIP').value.trim();
+        const gateway = document.getElementById('fGateway').value.trim();
+        const dns1 = document.getElementById('fDNS1').value.trim();
+        const dns2 = document.getElementById('fDNS2').value.trim();
+        const senha = document.getElementById('fSenha').value.trim();
+
+        if (serie.length !== 14 || !/^\d{14}$/.test(serie)) {
+            mostrarMensagemForm('Série deve ter 14 dígitos numéricos.', 'error');
+            return;
+        }
+
+        const existente = encontrarColetor(serie);
+        if (existente && editandoSerie !== serie) {
+            mostrarMensagemForm(`Já existe um coletor com a série ${serie}.`, 'error');
+            return;
+        }
+
+        const coletor = {
+            id: existente ? existente.id : (ultimoId + 1),
+            nome, serie, ip, gateway, dns1, dns2: dns2 || '', senhaWifi: senha
+        };
+
+        if (editandoSerie !== null) {
+            const idx = dados.coletores.findIndex(c => String(c.serie).trim() === editandoSerie);
+            if (idx !== -1) dados.coletores[idx] = coletor;
+        } else {
+            dados.coletores.push(coletor);
+            ultimoId = coletor.id;
+        }
+
+        const salvou = await persistirNoServidor();
+        if (salvou) {
+            mostrarMensagemForm('✅ Salvo no coletores.json com sucesso!', 'success');
+            atualizarUltimoId();
+            atualizarTotal();
+            exibirColetor(coletor);
+            cancelarEdicao();
+        } else {
+            mostrarMensagemForm('⚠️ Erro ao salvar no disco pelo servidor.', 'error');
+        }
+    }
+
+    async function excluirColetor() {
+        const serie = document.getElementById('dadosExibicao').dataset.serie;
+        if (!confirm(`Deseja excluir o coletor ${serie}?`)) return;
+
+        dados.coletores = dados.coletores.filter(c => String(c.serie).trim() !== String(serie).trim());
+        const salvou = await persistirNoServidor();
+        if (salvou) {
+            atualizarUltimoId();
+            atualizarTotal();
+            limparBusca();
+            mostrarMensagem('Coletor excluído com sucesso.', 'success');
+        } else {
+            mostrarMensagem('Erro ao salvar alteração no arquivo.', 'error');
+        }
+    }
+
+    function mostrarMensagemForm(texto, tipo) {
+        const el = document.getElementById('formMensagem');
+        el.textContent = texto;
+        el.className = `msg msg-${tipo}`;
+        el.classList.remove('hidden');
+    }
+
+    async function criarAtalho() {
+        try {
+            const response = await fetch('/api/criar-atalho', { method: 'POST' });
+            if (response.ok) {
+                mostrarMensagem('✅ Atalho criado na Área de Trabalho com sucesso!', 'success');
+            } else {
+                throw new Error('Falha no servidor');
+            }
+        } catch (e) {
+            console.warn('Erro ao criar via servidor, baixando link alternativo...', e);
+            const url = window.location.href;
+            const blob = new Blob([`[InternetShortcut]\nURL=${url}\n`], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Central_Coletores.url';
+            link.click();
+            mostrarMensagem('Atalho gerado! Arraste o arquivo baixado para a Área de Trabalho.', 'info');
+        }
+    }
+</script>
+</body>
+</html>
