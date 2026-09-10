@@ -26,7 +26,6 @@
             --shadow: rgba(106, 27, 154, 0.15);
             --shadow-subtle: rgba(106, 27, 154, 0.08);
 
-            /* Cores da pill de status (Tema Claro) */
             --status-bg: #f5f0ff;
             --status-border: #d1c4e9;
             --status-online-text: #1b5e20;
@@ -54,7 +53,6 @@
             --shadow: rgba(0, 0, 0, 0.45);
             --shadow-subtle: rgba(0, 0, 0, 0.25);
 
-            /* Cores da pill de status (Tema Escuro conforme a imagem de referência) */
             --status-bg: #1c152a;
             --status-border: #3d2a58;
             --status-online-text: #5af5ad;
@@ -76,7 +74,6 @@
             border: 1px solid var(--border-color); 
         }
         
-        /* Topo dividido em 3 colunas: Logo (esquerda) | Título (centro) | Controles (direita) */
         .header-top {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -135,7 +132,6 @@
             flex-wrap: wrap;
         }
 
-        /* Pill de status (Não-clicável) */
         .status-pill {
             display: inline-flex;
             align-items: center;
@@ -197,7 +193,7 @@
         
         .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: var(--bg-panel); padding: 12px 18px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); }
         .top-bar label { font-weight: 600; color: var(--text-main); }
-        .top-bar input[type="text"] { flex: 1; min-width: 250px; padding: 9px 14px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
+        .top-bar input[type="text"] { flex: 1; min-width: 280px; padding: 9px 14px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
         .top-bar input:focus { outline: 2px solid #7c3aed; border-color: transparent; }
         
         .grid-2 { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 25px; margin-top: 5px; }
@@ -276,6 +272,13 @@
         body.dark-mode .msg-success { background: #3b2359; color: #f0e3ff; }
         body.dark-mode .msg-error { background: #481d32; color: #ffb8d6; }
 
+        .sugestoes-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
         .footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; color: var(--text-muted); font-size: 13px; }
     </style>
 </head>
@@ -299,7 +302,6 @@
                 <img src="icone.ico" class="btn-icon-img" alt="Ícone" onerror="this.outerHTML='🖥️'"> Criar Atalho
             </button>
             
-            <!-- Botão não-clicável de status -->
             <div id="statusServidorPill" class="status-pill online">
                 <span class="dot"></span>
                 <span id="statusServidorTexto">Servidor local ativo</span>
@@ -308,8 +310,8 @@
     </div>
 
     <div class="top-bar">
-        <label for="buscaSerie">🔍 Nº de Série (14 dígitos):</label>
-        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234" maxlength="14" inputmode="numeric" onkeydown="if(event.key==='Enter') buscarColetor()">
+        <label for="buscaSerie">🔍 Buscar Coletor (Nº Série ou Nome):</label>
+        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234 ou CHR0001" onkeydown="if(event.key==='Enter') buscarColetor()">
         <button class="btn btn-primary" onclick="buscarColetor()">Buscar</button>
         <button class="btn btn-outline" onclick="limparBusca()">Limpar</button>
         <span style="font-size:13px; color:var(--text-muted);" id="totalInfo">Total: 0</span>
@@ -520,9 +522,30 @@
         return dados.coletores.find(c => String(c.serie).trim() === alvo);
     }
 
+    function normalizarTexto(str) {
+        return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    // Busca inteligente por Série exata OU Nome parcial
+    function filtrarColetores(termo) {
+        if (!dados.coletores || !termo) return [];
+        const termoNorm = normalizarTexto(termo);
+
+        // 1º: Tenta correspondência exata de Série
+        const exatoSerie = dados.coletores.filter(c => normalizarTexto(c.serie) === termoNorm);
+        if (exatoSerie.length > 0) return exatoSerie;
+
+        // 2º: Busca parcial no Nome ou Série
+        return dados.coletores.filter(c => {
+            const nomeNorm = normalizarTexto(c.nome);
+            const serieNorm = normalizarTexto(c.serie);
+            return nomeNorm.includes(termoNorm) || serieNorm.includes(termoNorm);
+        });
+    }
+
     function mostrarMensagem(texto, tipo = 'info') {
         const el = document.getElementById('mensagemResultado');
-        el.textContent = texto;
+        el.innerHTML = texto;
         el.className = `msg msg-${tipo}`;
         el.style.display = 'block';
     }
@@ -537,30 +560,61 @@
         cancelarEdicao();
     }
 
-    function buscarColetor() {
-        const input = document.getElementById('buscaSerie');
-        const serie = input.value.trim();
-
-        if (!serie) {
-            mostrarMensagem('Digite um número de série.', 'info');
-            return;
-        }
-
+    function selecionarColetorEncontrado(serie) {
         const coletor = encontrarColetor(serie);
         if (coletor) {
+            document.getElementById('buscaSerie').value = coletor.serie;
             exibirColetor(coletor);
             document.getElementById('statusBadge').textContent = 'Encontrado';
             document.getElementById('statusBadge').className = 'badge badge-success';
             document.getElementById('mensagemResultado').style.display = 'none';
             preencherFormularioEdicao(coletor);
+        }
+    }
+
+    function buscarColetor() {
+        const input = document.getElementById('buscaSerie');
+        const termo = input.value.trim();
+
+        if (!termo) {
+            mostrarMensagem('Digite o número de série ou o nome do dispositivo.', 'info');
+            return;
+        }
+
+        const resultados = filtrarColetores(termo);
+
+        if (resultados.length === 1) {
+            const coletor = resultados[0];
+            exibirColetor(coletor);
+            document.getElementById('statusBadge').textContent = 'Encontrado';
+            document.getElementById('statusBadge').className = 'badge badge-success';
+            document.getElementById('mensagemResultado').style.display = 'none';
+            preencherFormularioEdicao(coletor);
+        } else if (resultados.length > 1) {
+            document.getElementById('dadosExibicao').classList.add('hidden');
+            document.getElementById('statusBadge').textContent = `${resultados.length} encontrados`;
+            document.getElementById('statusBadge').className = 'badge badge-success';
+
+            let html = `Foram encontrados <strong>${resultados.length}</strong> coletores. Selecione um abaixo:<div class="sugestoes-grid">`;
+            resultados.forEach(c => {
+                html += `<button type="button" class="btn btn-outline btn-sm" onclick="selecionarColetorEncontrado('${c.serie}')">${c.nome} (${c.serie})</button>`;
+            });
+            html += `</div>`;
+            mostrarMensagem(html, 'info');
         } else {
             document.getElementById('dadosExibicao').classList.add('hidden');
             document.getElementById('dadosExibicao').dataset.serie = '';
             document.getElementById('statusBadge').textContent = 'Não encontrado';
             document.getElementById('statusBadge').className = 'badge badge-danger';
-            mostrarMensagem(`Série ${serie} não cadastrada. Preencha o formulário para cadastrar.`, 'info');
+            mostrarMensagem(`Nenhum coletor encontrado com "${termo}". Preencha o formulário ao lado para cadastrar.`, 'info');
             cancelarEdicao();
-            document.getElementById('fSerie').value = serie;
+
+            // Se digitou 14 números, preenche automaticamente no campo de série
+            if (/^\d{14}$/.test(termo)) {
+                document.getElementById('fSerie').value = termo;
+            } else {
+                document.getElementById('fNome').value = termo;
+            }
         }
     }
 
@@ -633,7 +687,7 @@
 
     function editarColetor() {
         const serie = document.getElementById('dadosExibicao').dataset.serie;
-        const coletor =找到 = encontrarColetor(serie);
+        const coletor = encontrarColetor(serie);
         if (coletor) preencherFormularioEdicao(coletor);
     }
 
