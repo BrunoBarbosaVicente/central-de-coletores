@@ -179,10 +179,37 @@
             vertical-align: middle;
         }
         
-        .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: var(--bg-panel); padding: 12px 18px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border-color); }
-        .top-bar label { font-weight: 600; color: var(--text-main); }
-        .top-bar input[type="text"] { flex: 1; min-width: 280px; padding: 9px 14px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
+        .top-bar { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            align-items: center; 
+            background: var(--bg-panel); 
+            padding: 12px 18px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border-color); 
+        }
+        .top-bar label { font-weight: 600; color: var(--text-main); font-size: 14px; white-space: nowrap; }
+        .top-bar input[type="text"] { 
+            width: 260px; 
+            max-width: 100%;
+            padding: 8px 12px; 
+            border: 1px solid var(--input-border); 
+            border-radius: 8px; 
+            font-size: 14px; 
+            background: var(--input-bg); 
+            color: var(--text-main); 
+        }
         .top-bar input:focus { outline: 2px solid #7c3aed; border-color: transparent; }
+
+        .top-bar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
         
         .grid-2 { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 25px; margin-top: 5px; }
         @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
@@ -282,16 +309,25 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+
+        .coletor-actions-right {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
         
         .hidden { display: none !important; }
         .msg { padding: 10px 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
         .msg-info { background: #ede7f6; color: #2d1b4e; }
         .msg-success { background: #e8d5ff; color: #2d1b4e; }
         .msg-error { background: #fce4ec; color: #7a2b4a; }
+        .msg-warning { background: #fff3cd; color: #664d03; }
         
         body.dark-mode .msg-info { background: #2f2048; color: #dfcefc; }
         body.dark-mode .msg-success { background: #3b2359; color: #f0e3ff; }
         body.dark-mode .msg-error { background: #481d32; color: #ffb8d6; }
+        body.dark-mode .msg-warning { background: #4a3c10; color: #ffe69c; }
 
         .sugestoes-grid {
             display: flex;
@@ -322,9 +358,9 @@
             padding: 24px;
             box-shadow: 0 15px 35px var(--shadow);
         }
-        .modal-content-lg {
-            max-width: 900px;
-        }
+        .modal-content-lg { max-width: 900px; }
+        .modal-content-xl { max-width: 1100px; }
+        
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -334,30 +370,71 @@
             padding-bottom: 10px;
         }
 
-        .atalhos-filtros-bar {
+        .filtros-modal-bar {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background: var(--bg-panel);
             padding: 10px 14px;
             border-radius: 10px;
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
+            flex-wrap: wrap;
         }
-        .atalhos-filtros-bar label {
+        .filtros-modal-bar label {
             font-size: 13px;
             font-weight: 600;
             color: var(--text-main);
             white-space: nowrap;
         }
-        .atalhos-filtros-bar select {
-            flex: 1;
+        .filtros-modal-bar select, .filtros-modal-bar input {
             padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid var(--input-border);
             background: var(--input-bg);
             color: var(--text-main);
             font-size: 13px;
+        }
+
+        .tabela-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-dados);
+            margin-top: 10px;
+        }
+        .tabela-coletores {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+        .tabela-coletores th {
+            background: var(--bg-panel);
+            padding: 10px 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .tabela-coletores td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border-item);
+            color: var(--text-main);
+        }
+        .tabela-coletores tr:hover {
+            background: var(--bg-panel);
+        }
+
+        .badge-setor {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: var(--border-color);
+            color: var(--text-main);
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .atalhos-novo-box {
@@ -374,12 +451,8 @@
             gap: 16px;
             margin-top: 15px;
         }
-        @media (max-width: 768px) {
-            .atalhos-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 500px) {
-            .atalhos-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { .atalhos-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .atalhos-grid { grid-template-columns: 1fr; } }
 
         .atalho-card {
             background: var(--bg-card);
@@ -457,10 +530,6 @@
         </div>
 
         <div class="top-controls">
-            <!-- Botão para enviar arquivos para o MC3300x via USB -->
-            <button class="btn btn-warning btn-sm" onclick="enviarArquivosUSB()" title="Copia os arquivos da pasta 'arquivos_carga' direto para a pasta Download do MC3300x">
-                📥 Enviar Arquivos USB
-            </button>
             <button id="btnTema" class="btn btn-outline btn-sm" onclick="alternarTema()">🌙 Tema Escuro</button>
             <button class="btn btn-outline btn-sm" onclick="criarAtalho()">
                 <img src="icone.ico" class="btn-icon-img" alt="Ícone" onerror="this.outerHTML='🖥️'"> Criar Atalho
@@ -474,15 +543,20 @@
     </div>
 
     <div class="top-bar">
-        <label for="buscaSerie">🔍 Buscar Coletor (Nº Série, Nome ou MAC):</label>
-        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234, CHR0001 ou 00:1A:2B:3C:4D:5E" onkeydown="if(event.key==='Enter') buscarColetor()">
-        <button class="btn btn-primary" onclick="buscarColetor()">Buscar</button>
-        <button class="btn btn-outline" onclick="limparBusca()">Limpar</button>
-        <span style="font-size:13px; color:var(--text-muted);" id="totalInfo">Total: 0</span>
+        <label for="buscaSerie">🔍 Buscar Coletor:</label>
+        <input type="text" id="buscaSerie" placeholder="Série, Nome ou MAC" onkeydown="if(event.key==='Enter') buscarColetor()">
+        <button class="btn btn-primary btn-sm" onclick="buscarColetor()">Buscar</button>
+        <button class="btn btn-outline btn-sm" onclick="limparBusca()">Limpar</button>
+
+        <div class="top-bar-right">
+            <button class="btn btn-outline btn-sm" onclick="abrirModalTodosColetores()">
+                📋 Ver Todos os Coletores
+            </button>
+            <span style="font-size:13px; color:var(--text-muted); font-weight: 600;" id="totalInfo">Total: 0</span>
+        </div>
     </div>
 
     <div class="grid-2">
-        <!-- Detalhes do Coletor -->
         <div class="card">
             <h2>
                 📋 Dados do Coletor
@@ -512,15 +586,19 @@
                             <button class="btn btn-warning btn-sm" onclick="editarColetor()">✏️ Editar</button>
                             <button class="btn btn-danger btn-sm" onclick="excluirColetor()">🗑️ Excluir</button>
                         </div>
-                        <button class="btn btn-primary btn-sm" onclick="abrirModalAtalhos()">
-                            🔖 Nome dos Atalhos
-                        </button>
+                        <div class="coletor-actions-right">
+                            <button class="btn btn-warning btn-sm" onclick="enviarArquivosUSB()" title="Copia os arquivos da pasta 'arquivos_carga' direto para a pasta Download do MC3300x">
+                                📥 Enviar Arquivos USB
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="abrirModalAtalhos()">
+                                🔖 Nome dos Atalhos
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Formulário de Coletor -->
         <div class="card">
             <h2>
                 <span id="formTitulo">➕ Novo Coletor</span>
@@ -626,7 +704,7 @@
             <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalAtalhos()">✖</button>
         </div>
 
-        <div class="atalhos-filtros-bar">
+        <div class="filtros-modal-bar">
             <label for="filtroAtalhoPlanta">🏢 Filtrar por Planta:</label>
             <select id="filtroAtalhoPlanta" onchange="renderizarAtalhosQR()">
                 <option value="TODAS">Todas as Plantas</option>
@@ -655,6 +733,49 @@
         </div>
 
         <div id="listaAtalhosQR" class="atalhos-grid"></div>
+    </div>
+</div>
+
+<!-- MODAL: Listagem Completa com Filtro de Planta e Setor -->
+<div id="modalTodosColetores" class="modal-overlay hidden">
+    <div class="modal-content modal-content-xl">
+        <div class="modal-header">
+            <h3 style="font-size:18px;">📋 Todos os Coletores Cadastrados</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalTodosColetores()">✖</button>
+        </div>
+
+        <div class="filtros-modal-bar">
+            <label for="filtroModalPlanta">🏢 Planta:</label>
+            <select id="filtroModalPlanta" onchange="renderizarTabelaColetores()">
+                <option value="TODAS">Todas as Plantas</option>
+            </select>
+
+            <label for="filtroModalSetor">🏷️ Setor:</label>
+            <select id="filtroModalSetor" onchange="renderizarTabelaColetores()">
+                <option value="TODOS">Todos os Setores</option>
+            </select>
+
+            <label for="filtroModalTexto">🔍 Pesquisar:</label>
+            <input type="text" id="filtroModalTexto" placeholder="Série, IP, MAC..." oninput="renderizarTabelaColetores()" style="flex:1; min-width: 150px;">
+            <span id="contadorColetoresModal" style="font-size:12px; font-weight:600; color:var(--text-muted);">Total: 0</span>
+        </div>
+
+        <div class="tabela-container">
+            <table class="tabela-coletores">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Setor</th>
+                        <th>Nº de Série</th>
+                        <th>MAC</th>
+                        <th>IP</th>
+                        <th>Planta</th>
+                        <th style="text-align:center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabelaColetores"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -988,13 +1109,16 @@
         const select = document.getElementById('fPlanta');
         const selectNovoAtalho = document.getElementById('novoAtalhoPlanta');
         const selectFiltro = document.getElementById('filtroAtalhoPlanta');
+        const selectFiltroModalColetores = document.getElementById('filtroModalPlanta');
 
         const valorAtual = selecionarId || select.value;
         const valorFiltroAtual = selectFiltro.value;
+        const valorFiltroModalAtual = selectFiltroModalColetores.value;
 
         select.innerHTML = '<option value="">Selecione uma planta cadastrada...</option>';
         selectNovoAtalho.innerHTML = '<option value="">Selecione a planta...</option>';
         selectFiltro.innerHTML = '<option value="TODAS">Todas as Plantas</option>';
+        selectFiltroModalColetores.innerHTML = '<option value="TODAS">Todas as Plantas</option>';
 
         dados.plantas.forEach(p => {
             const opt = document.createElement('option');
@@ -1011,10 +1135,16 @@
             optFiltro.value = p.id;
             optFiltro.textContent = p.nome;
             selectFiltro.appendChild(optFiltro);
+
+            const optFiltroModal = document.createElement('option');
+            optFiltroModal.value = p.id;
+            optFiltroModal.textContent = p.nome;
+            selectFiltroModalColetores.appendChild(optFiltroModal);
         });
 
         if (valorAtual) select.value = valorAtual;
         if (valorFiltroAtual) selectFiltro.value = valorFiltroAtual;
+        if (valorFiltroModalAtual) selectFiltroModalColetores.value = valorFiltroModalAtual;
         atualizarPreviewPlanta();
     }
 
@@ -1137,13 +1267,17 @@
             atualizarTotal();
             exibirColetor(coletor);
             cancelarEdicao();
+            if (!document.getElementById('modalTodosColetores').classList.contains('hidden')) {
+                popularSelectSetores();
+                renderizarTabelaColetores();
+            }
         } else {
             mostrarMensagemForm('⚠️ Erro ao salvar no disco pelo servidor.', 'error');
         }
     }
 
-    async function excluirColetor() {
-        const serie = document.getElementById('dadosExibicao').dataset.serie;
+    async function excluirColetor(serieInformada = null) {
+        const serie = serieInformada || document.getElementById('dadosExibicao').dataset.serie;
         if (!confirm(`Deseja excluir o coletor ${serie}?`)) return;
 
         dados.coletores = dados.coletores.filter(c => String(c.serie).trim() !== String(serie).trim());
@@ -1153,6 +1287,10 @@
             atualizarTotal();
             limparBusca();
             mostrarMensagem('Coletor excluído com sucesso.', 'success');
+            if (!document.getElementById('modalTodosColetores').classList.contains('hidden')) {
+                popularSelectSetores();
+                renderizarTabelaColetores();
+            }
         } else {
             mostrarMensagem('Erro ao salvar alteração no arquivo.', 'error');
         }
@@ -1163,6 +1301,172 @@
         el.textContent = texto;
         el.className = `msg msg-${tipo}`;
         el.classList.remove('hidden');
+    }
+
+    // ==========================================
+    //  EXTRAÇÃO DE REFERÊNCIA E SETOR
+    // ==========================================
+    function extrairChaveReferenciaNome(nome) {
+        if (!nome) return { prefixo: '', numero: 0, original: '' };
+        
+        const match = String(nome).trim().match(/^([A-Za-z]+)?\s*0*(\d+)/);
+        if (match) {
+            return {
+                prefixo: (match[1] || '').toUpperCase(),
+                numero: parseInt(match[2], 10) || 0,
+                original: nome.toLowerCase()
+            };
+        }
+        return { prefixo: nome.toLowerCase(), numero: 0, original: nome.toLowerCase() };
+    }
+
+    // Extrai o setor (tudo que vem após CHR0001 ou o hífen/espaço)
+    function extrairSetor(nome) {
+        if (!nome) return 'Não Definido';
+        const str = String(nome).trim();
+
+        // 1º Tenta pegar após separador hífen: ex: "CHR0001 - Estoque A" => "Estoque A"
+        if (str.includes('-')) {
+            const partes = str.split('-');
+            if (partes.length > 1) {
+                const setor = partes.slice(1).join('-').trim();
+                if (setor) return setor;
+            }
+        }
+
+        // 2º Tenta remover a tag inicial (ex: "CHR0001 Estoque")
+        const semTag = str.replace(/^[A-Za-z]+\s*\d+\s*[-_:]*\s*/i, '').trim();
+        if (semTag) return semTag;
+
+        return 'Geral';
+    }
+
+    // ==========================================
+    //  MODAL: LISTAGEM GERAL COM FILTRO DE SETOR
+    // ==========================================
+    function popularSelectSetores() {
+        const selectSetor = document.getElementById('filtroModalSetor');
+        const valorAtual = selectSetor.value;
+        selectSetor.innerHTML = '<option value="TODOS">Todos os Setores</option>';
+
+        const setoresUnicos = new Set();
+        (dados.coletores || []).forEach(c => {
+            const setor = extrairSetor(c.nome);
+            if (setor) setoresUnicos.add(setor);
+        });
+
+        const listaOrdenada = Array.from(setoresUnicos).sort((a, b) => a.localeCompare(b));
+        listaOrdenada.forEach(setor => {
+            const opt = document.createElement('option');
+            opt.value = setor;
+            opt.textContent = setor;
+            selectSetor.appendChild(opt);
+        });
+
+        if (Array.from(selectSetor.options).some(o => o.value === valorAtual)) {
+            selectSetor.value = valorAtual;
+        } else {
+            selectSetor.value = 'TODOS';
+        }
+    }
+
+    function abrirModalTodosColetores() {
+        document.getElementById('modalTodosColetores').classList.remove('hidden');
+        document.getElementById('filtroModalTexto').value = '';
+        popularSelectSetores();
+        renderizarTabelaColetores();
+    }
+
+    function fecharModalTodosColetores() {
+        document.getElementById('modalTodosColetores').classList.add('hidden');
+    }
+
+    function renderizarTabelaColetores() {
+        const corpo = document.getElementById('corpoTabelaColetores');
+        const filtroPlanta = document.getElementById('filtroModalPlanta').value;
+        const filtroSetor = document.getElementById('filtroModalSetor').value;
+        const filtroTexto = normalizarTexto(document.getElementById('filtroModalTexto').value);
+        corpo.innerHTML = '';
+
+        let filtrados = [...(dados.coletores || [])];
+
+        // 1. Filtro por Planta
+        if (filtroPlanta !== 'TODAS') {
+            filtrados = filtrados.filter(c => c.plantaId === filtroPlanta);
+        }
+
+        // 2. Filtro por Setor
+        if (filtroSetor !== 'TODOS') {
+            filtrados = filtrados.filter(c => extrairSetor(c.nome) === filtroSetor);
+        }
+
+        // 3. Filtro textual
+        if (filtroTexto) {
+            filtrados = filtrados.filter(c => {
+                const n = normalizarTexto(c.nome);
+                const s = normalizarTexto(c.serie);
+                const m = normalizarTexto(c.mac);
+                const ip = normalizarTexto(c.ip);
+                const setor = normalizarTexto(extrairSetor(c.nome));
+                return n.includes(filtroTexto) || s.includes(filtroTexto) || m.includes(filtroTexto) || ip.includes(filtroTexto) || setor.includes(filtroTexto);
+            });
+        }
+
+        // 4. Ordenação pelo identificador de referência (CHR0001, CHR0002...)
+        filtrados.sort((a, b) => {
+            const refA = extrairChaveReferenciaNome(a.nome);
+            const refB = extrairChaveReferenciaNome(b.nome);
+
+            if (refA.prefixo !== refB.prefixo) {
+                return refA.prefixo.localeCompare(refB.prefixo);
+            }
+            if (refA.numero !== refB.numero) {
+                return refA.numero - refB.numero;
+            }
+            return refA.original.localeCompare(refB.original);
+        });
+
+        document.getElementById('contadorColetoresModal').textContent = `Total: ${filtrados.length}`;
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color:var(--text-muted);">Nenhum coletor encontrado com os filtros selecionados.</td></tr>`;
+            return;
+        }
+
+        filtrados.forEach(c => {
+            const planta = encontrarPlanta(c.plantaId);
+            const nomePlanta = planta ? planta.nome : '<span style="color:var(--text-muted);">Sem Planta</span>';
+            const setor = extrairSetor(c.nome);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${c.nome || '-'}</strong></td>
+                <td><span class="badge-setor">${setor}</span></td>
+                <td>${c.serie}</td>
+                <td><code>${c.mac || '-'}</code></td>
+                <td>${c.ip || '-'}</td>
+                <td>${nomePlanta}</td>
+                <td style="text-align:center; white-space:nowrap;">
+                    <button class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:12px;" onclick="carregarColetorPeloModal('${c.serie}')">👁️ Ver</button>
+                    <button class="btn btn-warning btn-sm" style="padding:4px 10px; font-size:12px;" onclick="editarColetorPeloModal('${c.serie}')">✏️</button>
+                    <button class="btn btn-danger btn-sm" style="padding:4px 10px; font-size:12px;" onclick="excluirColetor('${c.serie}')">🗑️</button>
+                </td>
+            `;
+            corpo.appendChild(tr);
+        });
+    }
+
+    function carregarColetorPeloModal(serie) {
+        selecionarColetorEncontrado(serie);
+        fecharModalTodosColetores();
+    }
+
+    function editarColetorPeloModal(serie) {
+        const coletor = encontrarColetor(serie);
+        if (coletor) {
+            selecionarColetorEncontrado(serie);
+            preencherFormularioEdicao(coletor);
+            fecharModalTodosColetores();
+        }
     }
 
     // ==========================================
