@@ -239,6 +239,126 @@
       "mac": "78:B8:D6:97:F8:AA",
       "ip": "172.28.102.109",
       "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 31,
+      "nome": "CHR0071 Expedição",
+      "serie": "23170520101593",
+      "mac": "78:B8:D6:9E:CD:54",
+      "ip": "172.28.102.118",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 32,
+      "nome": "CHR0090 Expedição",
+      "serie": "23017520101845",
+      "mac": "78:B8:D6:9C:32:E6",
+      "ip": "172.28.102.38",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 33,
+      "nome": "CHR0104 Expedição",
+      "serie": "23171520101216",
+      "mac": "78:B8:D6:9E:CD:64",
+      "ip": "172.28.102.76",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 34,
+      "nome": "CHR0002 Expedição",
+      "serie": "23171520101180",
+      "mac": "78:B8:D6:9E:CD:3A",
+      "ip": "172.28.102.92",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 35,
+      "nome": "CHR0067 Expedição",
+      "serie": "22192520101019",
+      "mac": "78:B8:D6:97:F7:9C",
+      "ip": "172.28.102.83",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 36,
+      "nome": "CHR0054 Expedição",
+      "serie": "22307520100943",
+      "mac": "78:B8:D6:9A:B1:48",
+      "ip": "172.28.102.107",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 37,
+      "nome": "CHR0113 Expedição",
+      "serie": "23171520101184",
+      "mac": "78:B8:D6:9E:CD:28",
+      "ip": "172.28.102.98",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 38,
+      "nome": "CHR0064",
+      "serie": "22192520101109",
+      "mac": "78:B8:D6:98:02:9D",
+      "ip": "172.28.102.104",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 39,
+      "nome": "CHR0095 Expedição",
+      "serie": "23171520101076",
+      "mac": "78:B8:D6:9E:CF:54",
+      "ip": "172.28.102.63",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 40,
+      "nome": "CHR0171 Recebimento",
+      "serie": "22307520100938",
+      "mac": "C8:1C:FE:A3:34:C1",
+      "ip": "172.28.102.26",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 41,
+      "nome": "CHR0114 Recebimento",
+      "serie": "23171520101031",
+      "mac": "78:B8:D6:9E:D5:81",
+      "ip": "172.28.102.37",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 42,
+      "nome": "CHR0062 Recebimento",
+      "serie": "22192520101108",
+      "mac": "78:B8:D6:98:02:B3",
+      "ip": "172.28.102.82",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 43,
+      "nome": "CHR0110 Recebimento",
+      "serie": "23171520100935",
+      "mac": "78:B8:D6:9E:6D:DD",
+      "ip": "172.28.102.80",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 44,
+      "nome": "CHR0070 Recebimento",
+      "serie": "22192520100975",
+      "mac": "78:B8:D6:98:04:CA",
+      "ip": "172.28.102.100",
+      "plantaId": "planta_1789010549668"
+    },
+    {
+      "id": 45,
+      "nome": "CHR0155 Recebimento",
+      "serie": "24072525100227",
+      "mac": "C8:1C:FE:A6:6A:D9",
+      "ip": "172.28.102.10",
+      "plantaId": "planta_1789010549668"
     }
   ],
   "plantas": [
