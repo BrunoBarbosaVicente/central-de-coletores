@@ -203,13 +203,8 @@
             gap: 8px;
             align-items: stretch;
         }
-        .select-with-button select {
-            flex: 1;
-        }
-        .select-with-button button {
-            white-space: nowrap;
-            padding: 0 14px;
-        }
+        .select-with-button select { flex: 1; }
+        .select-with-button button { white-space: nowrap; padding: 0 14px; }
 
         .dados-coletor { background: var(--bg-dados); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px var(--shadow-subtle); margin-top: 10px; border: 1px solid var(--border-item); }
         .dados-coletor .campo { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-item); }
@@ -272,6 +267,21 @@
             height: 145px !important; 
             display: block; 
         }
+
+        .coletor-actions-bar {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .coletor-actions-left {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
         
         .hidden { display: none !important; }
         .msg { padding: 10px 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
@@ -290,11 +300,11 @@
             margin-top: 10px;
         }
 
-        /* Modal de Plantas */
+        /* Modais */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.65);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -306,11 +316,14 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             width: 90%;
-            max-width: 600px;
+            max-width: 650px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 24px;
             box-shadow: 0 15px 35px var(--shadow);
+        }
+        .modal-content-lg {
+            max-width: 900px;
         }
         .modal-header {
             display: flex;
@@ -320,6 +333,97 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
+
+        .atalhos-filtros-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-panel);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .atalhos-filtros-bar label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .atalhos-filtros-bar select {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 13px;
+        }
+
+        .atalhos-novo-box {
+            background: var(--bg-panel);
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .atalhos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 15px;
+        }
+        @media (max-width: 768px) {
+            .atalhos-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 500px) {
+            .atalhos-grid { grid-template-columns: 1fr; }
+        }
+
+        .atalho-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+        }
+
+        .atalho-card .label-atalho {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-main);
+            word-break: break-word;
+            max-width: 100%;
+        }
+
+        .atalho-card .planta-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--border-color);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .atalho-card .qr-box {
+            width: 155px;
+            height: 155px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .atalho-card .qr-box canvas,
+        .atalho-card .qr-box img {
+            width: 155px !important;
+            height: 155px !important;
+            display: block;
+        }
+
         .plantas-lista {
             margin-top: 15px;
             border-top: 1px solid var(--border-color);
@@ -353,6 +457,10 @@
         </div>
 
         <div class="top-controls">
+            <!-- Botão para enviar arquivos para o MC3300x via USB -->
+            <button class="btn btn-warning btn-sm" onclick="enviarArquivosUSB()" title="Copia os arquivos da pasta 'arquivos_carga' direto para a pasta Download do MC3300x">
+                📥 Enviar Arquivos USB
+            </button>
             <button id="btnTema" class="btn btn-outline btn-sm" onclick="alternarTema()">🌙 Tema Escuro</button>
             <button class="btn btn-outline btn-sm" onclick="criarAtalho()">
                 <img src="icone.ico" class="btn-icon-img" alt="Ícone" onerror="this.outerHTML='🖥️'"> Criar Atalho
@@ -366,8 +474,8 @@
     </div>
 
     <div class="top-bar">
-        <label for="buscaSerie">🔍 Buscar Coletor (Nº Série ou Nome):</label>
-        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234 ou CHR0001" onkeydown="if(event.key==='Enter') buscarColetor()">
+        <label for="buscaSerie">🔍 Buscar Coletor (Nº Série, Nome ou MAC):</label>
+        <input type="text" id="buscaSerie" placeholder="Ex: 12345678901234, CHR0001 ou 00:1A:2B:3C:4D:5E" onkeydown="if(event.key==='Enter') buscarColetor()">
         <button class="btn btn-primary" onclick="buscarColetor()">Buscar</button>
         <button class="btn btn-outline" onclick="limparBusca()">Limpar</button>
         <span style="font-size:13px; color:var(--text-muted);" id="totalInfo">Total: 0</span>
@@ -386,6 +494,7 @@
                     <div class="dados-coletor">
                         <div class="campo"><span class="rotulo">Nome</span><span class="valor" id="exNome">-</span></div>
                         <div class="campo"><span class="rotulo">Nº de Série</span><span class="valor" id="exSerie">-</span></div>
+                        <div class="campo"><span class="rotulo">Endereço MAC</span><span class="valor" id="exMac">-</span></div>
                         <div class="campo"><span class="rotulo">Planta / Unidade</span><span class="valor" id="exPlanta">-</span></div>
                         <div class="campo"><span class="rotulo">IP</span><span class="valor" id="exIP">-</span></div>
                         <div class="campo"><span class="rotulo">Gateway</span><span class="valor" id="exGateway">-</span></div>
@@ -397,15 +506,21 @@
                         <div style="font-weight:600; font-size:14px; color:var(--text-main);">📲 QR Codes para configuração</div>
                         <div class="qr-grid" id="qrGrid"></div>
                     </div>
-                    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-warning btn-sm" onclick="editarColetor()">✏️ Editar</button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirColetor()">🗑️ Excluir</button>
+                    
+                    <div class="coletor-actions-bar">
+                        <div class="coletor-actions-left">
+                            <button class="btn btn-warning btn-sm" onclick="editarColetor()">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="excluirColetor()">🗑️ Excluir</button>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="abrirModalAtalhos()">
+                            🔖 Nome dos Atalhos
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Formulário Simplificado de Coletor -->
+        <!-- Formulário de Coletor -->
         <div class="card">
             <h2>
                 <span id="formTitulo">➕ Novo Coletor</span>
@@ -415,6 +530,10 @@
                 <div class="form-group">
                     <label for="fSerie">Nº de Série (14 dígitos) *</label>
                     <input type="text" id="fSerie" maxlength="14" inputmode="numeric" placeholder="12345678901234" required>
+                </div>
+                <div class="form-group">
+                    <label for="fMac">Endereço MAC (12 dígitos hexadecimais)</label>
+                    <input type="text" id="fMac" placeholder="00:1A:2B:3C:4D:5E" maxlength="17" oninput="formatarMAC(this)" style="text-transform: uppercase;">
                 </div>
                 <div class="form-group">
                     <label for="fNome">Nome do Dispositivo *</label>
@@ -496,10 +615,67 @@
     </div>
 </div>
 
+<!-- MODAL: Nomes dos Atalhos com QR Code -->
+<div id="modalAtalhos" class="modal-overlay hidden">
+    <div class="modal-content modal-content-lg">
+        <div class="modal-header">
+            <button type="button" class="btn btn-primary btn-sm" onclick="toggleFormNovoAtalho()">
+                ➕ Criar Nome
+            </button>
+            <h3 style="font-size:18px; margin: 0 10px;">🔖 Nomes dos Atalhos</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalAtalhos()">✖</button>
+        </div>
+
+        <div class="atalhos-filtros-bar">
+            <label for="filtroAtalhoPlanta">🏢 Filtrar por Planta:</label>
+            <select id="filtroAtalhoPlanta" onchange="renderizarAtalhosQR()">
+                <option value="TODAS">Todas as Plantas</option>
+            </select>
+        </div>
+
+        <div id="boxNovoAtalho" class="atalhos-novo-box hidden">
+            <form onsubmit="salvarNovoAtalho(event)">
+                <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:12px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="novoAtalhoNome">Nome / Identificador *</label>
+                        <input type="text" id="novoAtalhoNome" placeholder="Ex: RECEBIMENTO-DOCA-01" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="novoAtalhoPlanta">Vincular à Planta *</label>
+                        <select id="novoAtalhoPlanta" required>
+                            <option value="">Selecione a planta...</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button type="submit" class="btn btn-success btn-sm">💾 Gerar QR Code & Salvar</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="toggleFormNovoAtalho()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="listaAtalhosQR" class="atalhos-grid"></div>
+    </div>
+</div>
+
 <script>
-    let dados = { coletores: [], plantas: [] };
+    let dados = { coletores: [], plantas: [], atalhos: [] };
     let editandoSerie = null;
     let ultimoId = 0;
+
+    function formatarMAC(input) {
+        let valor = input.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+        if (valor.length > 12) valor = valor.substring(0, 12);
+
+        let formatado = '';
+        for (let i = 0; i < valor.length; i++) {
+            if (i > 0 && i % 2 === 0) {
+                formatado += ':';
+            }
+            formatado += valor[i];
+        }
+        input.value = formatado;
+    }
 
     function atualizarStatusServidor(online) {
         const pill = document.getElementById('statusServidorPill');
@@ -541,6 +717,10 @@
             const coletor = encontrarColetor(serieExibida);
             if (coletor) exibirColetor(coletor);
         }
+
+        if (!document.getElementById('modalAtalhos').classList.contains('hidden')) {
+            renderizarAtalhosQR();
+        }
     }
 
     function alternarTema() {
@@ -566,6 +746,7 @@
             
             if (!dados.coletores || !Array.isArray(dados.coletores)) dados.coletores = [];
             if (!dados.plantas || !Array.isArray(dados.plantas)) dados.plantas = [];
+            if (!dados.atalhos || !Array.isArray(dados.atalhos)) dados.atalhos = [];
 
             dados.coletores.forEach(c => {
                 if (!c.plantaId && (c.gateway || c.senhaWifi)) {
@@ -648,6 +829,7 @@
     function filtrarColetores(termo) {
         if (!dados.coletores || !termo) return [];
         const termoNorm = normalizarTexto(termo);
+        const termoLimpo = termoNorm.replace(/[^0-9a-f]/g, '');
 
         const exatoSerie = dados.coletores.filter(c => normalizarTexto(c.serie) === termoNorm);
         if (exatoSerie.length > 0) return exatoSerie;
@@ -655,7 +837,13 @@
         return dados.coletores.filter(c => {
             const nomeNorm = normalizarTexto(c.nome);
             const serieNorm = normalizarTexto(c.serie);
-            return nomeNorm.includes(termoNorm) || serieNorm.includes(termoNorm);
+            const macNorm = normalizarTexto(c.mac);
+            const macLimpo = macNorm.replace(/[^0-9a-f]/g, '');
+
+            return nomeNorm.includes(termoNorm) || 
+                   serieNorm.includes(termoNorm) || 
+                   macNorm.includes(termoNorm) || 
+                   (termoLimpo.length >= 3 && macLimpo.includes(termoLimpo));
         });
     }
 
@@ -670,6 +858,7 @@
         document.getElementById('buscaSerie').value = '';
         document.getElementById('dadosExibicao').classList.add('hidden');
         document.getElementById('dadosExibicao').dataset.serie = '';
+        document.getElementById('dadosExibicao').dataset.plantaId = '';
         document.getElementById('mensagemResultado').style.display = 'none';
         document.getElementById('statusBadge').textContent = 'Nenhum';
         document.getElementById('statusBadge').className = 'badge';
@@ -693,7 +882,7 @@
         const termo = input.value.trim();
 
         if (!termo) {
-            mostrarMensagem('Digite o número de série ou o nome do dispositivo.', 'info');
+            mostrarMensagem('Digite o número de série, nome ou MAC do dispositivo.', 'info');
             return;
         }
 
@@ -720,6 +909,7 @@
         } else {
             document.getElementById('dadosExibicao').classList.add('hidden');
             document.getElementById('dadosExibicao').dataset.serie = '';
+            document.getElementById('dadosExibicao').dataset.plantaId = '';
             document.getElementById('statusBadge').textContent = 'Não encontrado';
             document.getElementById('statusBadge').className = 'badge badge-danger';
             mostrarMensagem(`Nenhum coletor encontrado com "${termo}". Preencha o formulário ao lado para cadastrar.`, 'info');
@@ -742,6 +932,7 @@
 
         document.getElementById('exNome').textContent = coletor.nome || '-';
         document.getElementById('exSerie').textContent = coletor.serie;
+        document.getElementById('exMac').textContent = coletor.mac || '-';
         document.getElementById('exPlanta').textContent = planta ? planta.nome : 'Não definida';
         document.getElementById('exIP').textContent = coletor.ip || '-';
 
@@ -790,21 +981,40 @@
 
         document.getElementById('dadosExibicao').classList.remove('hidden');
         document.getElementById('dadosExibicao').dataset.serie = coletor.serie;
+        document.getElementById('dadosExibicao').dataset.plantaId = coletor.plantaId || '';
     }
 
     function popularSelectPlantas(selecionarId = null) {
         const select = document.getElementById('fPlanta');
+        const selectNovoAtalho = document.getElementById('novoAtalhoPlanta');
+        const selectFiltro = document.getElementById('filtroAtalhoPlanta');
+
         const valorAtual = selecionarId || select.value;
+        const valorFiltroAtual = selectFiltro.value;
+
         select.innerHTML = '<option value="">Selecione uma planta cadastrada...</option>';
+        selectNovoAtalho.innerHTML = '<option value="">Selecione a planta...</option>';
+        selectFiltro.innerHTML = '<option value="TODAS">Todas as Plantas</option>';
 
         dados.plantas.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p.id;
             opt.textContent = p.nome;
             select.appendChild(opt);
+
+            const optAtalho = document.createElement('option');
+            optAtalho.value = p.id;
+            optAtalho.textContent = p.nome;
+            selectNovoAtalho.appendChild(optAtalho);
+
+            const optFiltro = document.createElement('option');
+            optFiltro.value = p.id;
+            optFiltro.textContent = p.nome;
+            selectFiltro.appendChild(optFiltro);
         });
 
         if (valorAtual) select.value = valorAtual;
+        if (valorFiltroAtual) selectFiltro.value = valorFiltroAtual;
         atualizarPreviewPlanta();
     }
 
@@ -827,6 +1037,7 @@
     function preencherFormularioEdicao(coletor) {
         document.getElementById('fSerie').value = coletor.serie;
         document.getElementById('fSerie').disabled = true;
+        document.getElementById('fMac').value = coletor.mac || '';
         document.getElementById('fNome').value = coletor.nome || '';
         document.getElementById('fIP').value = coletor.ip || '';
         document.getElementById('fPlanta').value = coletor.plantaId || '';
@@ -860,6 +1071,7 @@
         event.preventDefault();
 
         const serie = document.getElementById('fSerie').value.trim();
+        const mac = document.getElementById('fMac').value.trim().toUpperCase();
         const nome = document.getElementById('fNome').value.trim();
         const ip = document.getElementById('fIP').value.trim();
         const plantaId = document.getElementById('fPlanta').value;
@@ -869,6 +1081,14 @@
             return;
         }
 
+        if (mac) {
+            const macLimpo = mac.replace(/[^0-9A-F]/g, '');
+            if (macLimpo.length !== 12) {
+                mostrarMensagemForm('Endereço MAC incompleto. Ele deve ter exatamente 12 caracteres hexadecimais.', 'error');
+                return;
+            }
+        }
+
         if (!plantaId) {
             mostrarMensagemForm('Selecione a Planta para vincular as configurações de rede.', 'error');
             return;
@@ -876,7 +1096,20 @@
 
         const existente = encontrarColetor(serie);
         if (existente && editandoSerie !== serie) {
-            mostrarMensagemForm(`Já existe um coletor com a série ${serie}.`, 'error');
+            mostrarMensagemForm(`Já existe um coletor com o número de série ${serie}.`, 'error');
+            return;
+        }
+
+        const ipDuplicadoNaPlanta = dados.coletores.find(c => 
+            String(c.ip).trim() === ip &&
+            c.plantaId === plantaId &&
+            String(c.serie).trim() !== (editandoSerie || '')
+        );
+
+        if (ipDuplicadoNaPlanta) {
+            const planta = encontrarPlanta(plantaId);
+            const nomePlanta = planta ? planta.nome : 'esta planta';
+            mostrarMensagemForm(`O IP ${ip} já está em uso pelo equipamento "${ipDuplicadoNaPlanta.nome}" na planta "${nomePlanta}".`, 'error');
             return;
         }
 
@@ -884,6 +1117,7 @@
             id: existente ? existente.id : (ultimoId + 1),
             nome,
             serie,
+            mac,
             ip,
             plantaId
         };
@@ -929,6 +1163,39 @@
         el.textContent = texto;
         el.className = `msg msg-${tipo}`;
         el.classList.remove('hidden');
+    }
+
+    // ==========================================
+    //  ENVIO VIA USB (MTP)
+    // ==========================================
+    async function enviarArquivosUSB() {
+        if (!confirm('Deseja transferir todos os arquivos da pasta "arquivos_carga" diretamente para o MC3300x?')) return;
+
+        mostrarMensagem('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
+
+        try {
+            const response = await fetch('/api/enviar-usb', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const rawText = await response.text();
+            let json = {};
+            try {
+                json = JSON.parse(rawText);
+            } catch (e) {
+                json = { status: response.ok ? 'ok' : 'erro', mensagem: rawText };
+            }
+
+            if (response.ok && json.status === 'ok') {
+                mostrarMensagem(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
+            } else {
+                mostrarMensagem(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
+        }
     }
 
     // ==========================================
@@ -1001,8 +1268,10 @@
 
     async function excluirPlanta(id) {
         const vinculados = dados.coletores.filter(c => c.plantaId === id).length;
-        if (vinculados > 0) {
-            if (!confirm(`Existem ${vinculados} coletor(es) vinculados a esta planta. Deseja realmente excluir?`)) {
+        const atalhosVinculados = dados.atalhos.filter(a => a.plantaId === id).length;
+
+        if (vinculados > 0 || atalhosVinculados > 0) {
+            if (!confirm(`Existem ${vinculados} coletor(es) e ${atalhosVinculados} atalho(s) vinculados a esta planta. Deseja realmente excluir?`)) {
                 return;
             }
         } else {
@@ -1013,6 +1282,130 @@
         await persistirNoServidor();
         popularSelectPlantas();
         renderizarListaPlantas();
+    }
+
+    // ==========================================
+    //  GERENCIAMENTO DE ATALHOS POR PLANTA
+    // ==========================================
+    function abrirModalAtalhos() {
+        document.getElementById('modalAtalhos').classList.remove('hidden');
+        document.getElementById('boxNovoAtalho').classList.add('hidden');
+
+        const plantaIdExibida = document.getElementById('dadosExibicao').dataset.plantaId;
+        const filtro = document.getElementById('filtroAtalhoPlanta');
+
+        if (plantaIdExibida && [...filtro.options].some(o => o.value === plantaIdExibida)) {
+            filtro.value = plantaIdExibida;
+            document.getElementById('novoAtalhoPlanta').value = plantaIdExibida;
+        } else {
+            filtro.value = "TODAS";
+        }
+
+        renderizarAtalhosQR();
+    }
+
+    function fecharModalAtalhos() {
+        document.getElementById('modalAtalhos').classList.add('hidden');
+        document.getElementById('novoAtalhoNome').value = '';
+    }
+
+    function toggleFormNovoAtalho() {
+        const box = document.getElementById('boxNovoAtalho');
+        box.classList.toggle('hidden');
+        if (!box.classList.contains('hidden')) {
+            document.getElementById('novoAtalhoNome').focus();
+            const filtroAtual = document.getElementById('filtroAtalhoPlanta').value;
+            if (filtroAtual !== "TODAS") {
+                document.getElementById('novoAtalhoPlanta').value = filtroAtual;
+            }
+        }
+    }
+
+    function renderizarAtalhosQR() {
+        const container = document.getElementById('listaAtalhosQR');
+        container.innerHTML = '';
+
+        if (!dados.atalhos || dados.atalhos.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:20px; color:var(--text-muted); font-size:14px;">Nenhum nome de atalho cadastrado. Clique no botão "+ Criar Nome" acima.</div>';
+            return;
+        }
+
+        const filtroPlanta = document.getElementById('filtroAtalhoPlanta').value;
+        const atalhosFiltrados = (filtroPlanta === "TODAS") 
+            ? dados.atalhos 
+            : dados.atalhos.filter(a => a.plantaId === filtroPlanta);
+
+        if (atalhosFiltrados.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:20px; color:var(--text-muted); font-size:14px;">Nenhum atalho encontrado para a planta selecionada.</div>';
+            return;
+        }
+
+        const isDark = document.body.classList.contains('dark-mode');
+        const corDark = isDark ? '#f5eeff' : '#2d1b4e';
+        const corLight = isDark ? '#281940' : '#ffffff';
+
+        atalhosFiltrados.forEach(atalho => {
+            const planta = encontrarPlanta(atalho.plantaId);
+            const plantaNome = planta ? planta.nome : 'Sem Planta';
+
+            const card = document.createElement('div');
+            card.className = 'atalho-card';
+
+            const qrId = `qr-atalho-${atalho.id}`;
+            card.innerHTML = `
+                <span class="planta-badge">${plantaNome}</span>
+                <span class="label-atalho">${atalho.nome}</span>
+                <div id="${qrId}" class="qr-box"></div>
+                <button class="btn btn-danger btn-sm" style="margin-top:6px;" onclick="excluirAtalho('${atalho.id}')">🗑️ Excluir</button>
+            `;
+            container.appendChild(card);
+
+            new QRCode(document.getElementById(qrId), {
+                text: removerAcentos(atalho.nome),
+                width: 155,
+                height: 155,
+                colorDark: corDark,
+                colorLight: corLight,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+    }
+
+    async function salvarNovoAtalho(event) {
+        event.preventDefault();
+        const inputNome = document.getElementById('novoAtalhoNome');
+        const inputPlanta = document.getElementById('novoAtalhoPlanta');
+
+        const nome = inputNome.value.trim();
+        const plantaId = inputPlanta.value;
+
+        if (!nome || !plantaId) {
+            alert('Preencha o nome do atalho e selecione a planta correspondente.');
+            return;
+        }
+
+        if (!dados.atalhos) dados.atalhos = [];
+
+        const novoAtalho = {
+            id: 'atalho_' + Date.now(),
+            nome: nome,
+            plantaId: plantaId
+        };
+
+        dados.atalhos.push(novoAtalho);
+        await persistirNoServidor();
+
+        inputNome.value = '';
+        document.getElementById('boxNovoAtalho').classList.add('hidden');
+        renderizarAtalhosQR();
+    }
+
+    async function excluirAtalho(id) {
+        if (!confirm('Deseja realmente excluir este atalho?')) return;
+
+        dados.atalhos = dados.atalhos.filter(a => a.id !== id);
+        await persistirNoServidor();
+        renderizarAtalhosQR();
     }
 
     async function criarAtalho() {

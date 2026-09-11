@@ -21,12 +21,65 @@ $listener.Start()
 Write-Host "Servidor rodando em $url" -ForegroundColor Green
 Write-Host "Pressione Ctrl+C para parar." -ForegroundColor Red
 
+# Função para localizar o MC3300x e copiar sem travar a requisição
+function Copiar-ParaZebraMTP($origemPasta) {
+    $shell = New-Object -ComObject Shell.Application
+    # 17 = ssfDRIVES (Este Computador)
+    $esteComputador = $shell.Namespace(17)
+
+    $pastaDownloadMTP = $null
+    $nomeColetor = ""
+
+    foreach ($item in $esteComputador.Items()) {
+        if ($item.Name -match "MC3300|Zebra" -or ($null -ne $item.GetFolder -and $item.Type -match "Portátil|Portable|Dispositivo")) {
+            $dispFolder = $item.GetFolder
+            if ($null -ne $dispFolder) {
+                foreach ($particao in $dispFolder.Items()) {
+                    if ($particao.Name -match "Divis[aã]o interna|Armazenamento|Internal") {
+                        $particaoFolder = $particao.GetFolder
+                        if ($null -ne $particaoFolder) {
+                            foreach ($pastaInterna in $particaoFolder.Items()) {
+                                if ($pastaInterna.Name -eq "Download") {
+                                    $pastaDownloadMTP = $pastaInterna.GetFolder
+                                    $nomeColetor = $item.Name
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    if ($null -ne $pastaDownloadMTP) { break }
+                }
+            }
+        }
+        if ($null -ne $pastaDownloadMTP) { break }
+    }
+
+    if ($null -eq $pastaDownloadMTP) {
+        throw "Nao foi possivel encontrar a pasta Download no MC3300x. Verifique se a tela esta desbloqueada e em modo Transferencia de Arquivo."
+    }
+
+    $origemShell = $shell.Namespace($origemPasta)
+    $itensOrigem = $origemShell.Items()
+
+    if ($itensOrigem.Count -eq 0) {
+        throw "A pasta arquivos_carga esta vazia."
+    }
+
+    # Copia todos os itens de uma vez (16 = Sim para todos, sem caixas de diálogo)
+    $pastaDownloadMTP.CopyHere($itensOrigem, 16)
+
+    # Pausa curta para iniciar a cópia via Shell
+    Start-Sleep -Seconds 2
+
+    return "$($itensOrigem.Count) arquivo(s) enviados para o MC3300x com sucesso!"
+}
+
 while ($listener.IsListening) {
     $context = $listener.GetContext()
     $request = $context.Request
     $response = $context.Response
 
-    # CORS
+    # Configuração de CORS e Cabeçalhos
     $response.AddHeader("Access-Control-Allow-Origin", "*")
     $response.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     $response.AddHeader("Access-Control-Allow-Headers", "Content-Type")
@@ -38,6 +91,33 @@ while ($listener.IsListening) {
     }
 
     $caminho = $request.Url.LocalPath.TrimStart('/')
+
+    # Rota para ENVIAR ARQUIVOS VIA MTP (Zebra MC3300x)
+    if ($request.HttpMethod -eq "POST" -and $caminho -eq "api/enviar-usb") {
+        try {
+            $origemArquivos = Join-Path $pasta "arquivos_carga"
+
+            if (-not (Test-Path $origemArquivos)) {
+                New-Item -ItemType Directory -Path $origemArquivos | Out-Null
+            }
+
+            $mensagemSucesso = Copiar-ParaZebraMTP -origemPasta $origemArquivos
+
+            $response.StatusCode = 200
+            $response.ContentType = "application/json; charset=utf-8"
+            $msgBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok","mensagem":"' + $mensagemSucesso + '"}')
+            $response.ContentLength64 = $msgBytes.Length
+            $response.OutputStream.Write($msgBytes, 0, $msgBytes.Length)
+        } catch {
+            $response.StatusCode = 500
+            $erroLimpo = $_.Exception.Message.Replace('"', "'").Replace("`r`n", " ").Replace("`n", " ")
+            $erroBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"erro","erro":"' + $erroLimpo + '"}')
+            $response.ContentLength64 = $erroBytes.Length
+            $response.OutputStream.Write($erroBytes, 0, $erroBytes.Length)
+        }
+        $response.OutputStream.Close()
+        continue
+    }
 
     # Rota para CRIAR ATALHO NA ÁREA DE TRABALHO
     if ($request.HttpMethod -eq "POST" -and $caminho -eq "api/criar-atalho") {
@@ -53,7 +133,6 @@ while ($listener.IsListening) {
             $shortcut.WorkingDirectory = $pasta
             $shortcut.Description = "Iniciar Central de Coletores"
 
-            # Se encontrar o arquivo icone.ico na pasta, aplica ao atalho
             if (Test-Path $iconePath -PathType Leaf) {
                 $shortcut.IconLocation = "$iconePath,0"
             }
@@ -100,7 +179,7 @@ while ($listener.IsListening) {
         continue
     }
 
-    # Leitura de arquivos estáticos (GET)
+    # Entrega de arquivos estáticos (GET)
     if ([string]::IsNullOrEmpty($caminho)) { $caminho = "index.html" }
     $arquivo = Join-Path $pasta $caminho
 
@@ -111,6 +190,8 @@ while ($listener.IsListening) {
             ".json" { $response.ContentType = "application/json; charset=utf-8" }
             ".js"   { $response.ContentType = "application/javascript" }
             ".css"  { $response.ContentType = "text/css" }
+            ".ico"  { $response.ContentType = "image/x-icon" }
+            ".png"  { $response.ContentType = "image/png" }
             default { $response.ContentType = "application/octet-stream" }
         }
 

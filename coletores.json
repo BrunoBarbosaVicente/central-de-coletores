@@ -2,21 +2,25 @@
   "coletores": [
     {
       "id": 1,
-      "nome": "CHR0001 - Expedição",
+      "nome": "CHR0001 Expedição",
       "serie": "12345678998745",
+      "mac": "fd:23:sd:ed:ss",
       "ip": "8.8.8.8",
-      "gateway": "0.0.0.0",
-      "dns1": "8.8.8.8",
-      "dns2": "8.8.4.4",
-      "senhaWifi": "12345",
-      "plantaId": "planta-padrao"
+      "plantaId": "planta_1789010097807"
     },
     {
       "id": 2,
-      "nome": "CHR0001 - Expedição",
-      "serie": "12345678998743",
-      "ip": "172.28.102.1",
+      "nome": "CHR0002 - Expedição",
+      "serie": "12345678998742",
+      "ip": "8.8.8.3",
       "plantaId": "planta_1789010097807"
+    },
+    {
+      "id": 3,
+      "nome": "CHR0001 - Expedição",
+      "serie": "12345678998741",
+      "ip": "8.8.8.8",
+      "plantaId": "planta_1789081378806"
     }
   ],
   "plantas": [
@@ -27,6 +31,33 @@
       "dns1": "172.28.16.3",
       "dns2": "172.28.16.2",
       "senhaWifi": "TDBSK2024@"
+    }
+  ],
+  "atalhos": [
+    {
+      "id": "atalho_1789013852476",
+      "nome": "1 CHECK SORTING",
+      "plantaId": "planta_1789010097807"
+    },
+    {
+      "id": "atalho_1789013878532",
+      "nome": "2 RELEASE",
+      "plantaId": "planta_1789010097807"
+    },
+    {
+      "id": "atalho_1789013901819",
+      "nome": "3 PICKING",
+      "plantaId": "planta_1789010097807"
+    },
+    {
+      "id": "atalho_1789014000131",
+      "nome": "VANNING",
+      "plantaId": "planta_1789010097807"
+    },
+    {
+      "id": "atalho_1789014022356",
+      "nome": "GTOPAS",
+      "plantaId": "planta_1789010097807"
     }
   ]
 }

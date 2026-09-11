@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><config>
+  <kiosk>
+    <application label="DWDemo" package="com.symbol.datawedge" activity="com.symbol.datawedge.DWDemoActivity"/>
+	<application label="StageNow" package="com.zebra.devicemanager" activity="com.zebra.devicemanager.stagenow.main.HomeScreen"/>
+  </kiosk>
+  <applications>
+    <application label="Chrome" package="com.android.chrome" activity="com.google.android.apps.chrome.Main"/>
+  <link label="PGRHandheld" pinned_activity="com.android.chrome"/>
+  </applications>
+  <tools>
+    <application label="StageNow" package="com.zebra.devicemanager" activity="com.zebra.devicemanager.stagenow.main.HomeScreen"/>
+  </tools>
+  <passwords>
+    <admin attempts="1">5aO9wPTCIkjkmFOfYL/JFZMQQPxaCgkuAbmf3XOJyC0=UqE7nZRGlvpCeDC4wkeE5e+HcGC5I2Vid6ApgrlFmzo=</admin>
+  </passwords>
+  <user_options/>
+  <preferences>
+    <usb_debugging_disabled>1</usb_debugging_disabled>
+    <keyguard_search_disabled>1</keyguard_search_disabled>
+    <icon_label_background_color>#00FFFFFF</icon_label_background_color>
+    <keyguard_camera_disabled>1</keyguard_camera_disabled>
+    <kiosk_mode_enabled>0</kiosk_mode_enabled>
+    <admin_inactivity_timeout>600</admin_inactivity_timeout>
+    <orientation>portrait</orientation>
+    <wallpaper/>
+    <icon_label_text_color>#FFFFFFFF</icon_label_text_color>
+    <auto_launch_enable>0</auto_launch_enable>
+    <service_auto_launch_enable>0</service_auto_launch_enable>
+    <system_settings_restricted>1</system_settings_restricted>
+    <fullscreen>1</fullscreen>
+    <title>Toyota;#32;PGR</title>
+    <pin_shortcuts>
+      <pin_shortcuts_enabled>1</pin_shortcuts_enabled>
+      <bypass_confirmation>1</bypass_confirmation>
+    </pin_shortcuts>
+    <wireless_info>
+      <show_ip_address>1</show_ip_address>
+      <show_mac_address>1</show_mac_address>
+      <show_bssid>1</show_bssid>
+      <show_ssid>1</show_ssid>
+      <show_scan_result>1</show_scan_result>
+    </wireless_info>
+    <screen_blanking>
+      <blanking_enabled>0</blanking_enabled>
+      <speed_threshold>10</speed_threshold>
+      <blanking_mode>1</blanking_mode>
+    </screen_blanking>
+    <apps_disabled>
+      <application package="com.android.settings"/>
+      <application package="com.google.android.googlequicksearchbox"/>
+      <application package="com.google.android.calendar"/>
+      <application package="com.android.contacts"/>
+      <application package="com.google.android.apps.docs"/>
+      <application package="com.google.android.gm"/>
+      <application package="com.android.vending"/>
+      <application package="com.google.android.videos"/>
+      <application package="com.google.android.keep"/>
+      <application package="com.google.android.apps.maps"/>
+      <application package="com.google.android.apps.photos"/>
+      <application package="org.codeaurora.dialer"/>
+      <application package="com.google.android.youtube"/>
+      <application package="com.google.android.apps.youtube.music"/>
+    </apps_disabled>
+  </preferences>
+</config>

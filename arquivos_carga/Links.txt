@@ -1,0 +1,52 @@
+Login GOOGLE 
+
+toyotamstore@gmail.com 
+
+1234@Tdb
+
+
+USAR  **NEW GTOPAS** 
+
+https://new-gtopas.toyota.com.br/ht/VJ/servlet/jp.co.toyota.pvjz130.servlet.CCVJZ130?_L=En&PID=WVJ10000&CID=WVJ10001   
+
+
+NÃO USAR  **OLD GTOPAS**  
+http://172.18.1.175/ht/VJ/servlet/jp.co.toyota.pvjz130.servlet.CCVJZ130?_L=En&PID=WVJ10000&CID=WVJ10001
+
+
+
+-------------------------------------------------------------
+
+
+USAR   ** VANNING **  
+
+https://spms-vanning-scanner.toyota.com.br/
+
+
+NÃO USAR  ** OLD Vanning **  
+https://sparts.toyota.com.br/vanning-scanner/pages/login.jsp
+
+
+SPPL
+
+https://sparts.toyota.com.br/sppc-web/htLogin/login.jsf
+
+
+GTOPAS DOJO 
+
+http://161.96.92.207/ht/VJZ/servlet/jp.co.toyota.pvjz130.servlet.CCVJZ130?_L=En&PID=WVJ10000&CID=WVJ10001 
+
+
+-----------------------------------------------------------------
+
+	TETE SAP  HANNA NO COLETOR 
+
+LINK 1 -> https://10.56.37.250:5200/sap/public/bc/icf/ping
+
+LINK 2 -> https://10.56.37.250:5200/sap/bc/ui2/flp?sap-client=200&sap-language=PT#Shell-home 
+
+LINK 3 -> https://10.56.37.250:5200/sap/bc/ui5_ui5/sap/zpp_caselabel/index.html?sap-client=200
+
+
+
+
