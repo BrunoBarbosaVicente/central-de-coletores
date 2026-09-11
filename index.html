@@ -1070,13 +1070,14 @@
         const grid = document.getElementById('qrGrid');
         grid.innerHTML = '';
 
+        // Ordem dos QR Codes: DNS 2 -> DNS 1 -> Gateway -> IP -> Senha Wi-Fi -> Nome
         const campos = [
-            { label: 'Nome', valor: coletor.nome || '-' },
-            { label: 'IP', valor: coletor.ip || '-' },
-            { label: 'Gateway', valor: gateway },
-            { label: 'DNS 1', valor: dns1 },
             { label: 'DNS 2', valor: dns2 },
-            { label: 'Senha Wi-Fi', valor: senhaWifi }
+            { label: 'DNS 1', valor: dns1 },
+            { label: 'Gateway', valor: gateway },
+            { label: 'IP', valor: coletor.ip || '-' },
+            { label: 'Senha Wi-Fi', valor: senhaWifi },
+            { label: 'Nome', valor: coletor.nome || '-' }
         ];
 
         const isDark = document.body.classList.contains('dark-mode');
@@ -1320,12 +1321,10 @@
         return { prefixo: nome.toLowerCase(), numero: 0, original: nome.toLowerCase() };
     }
 
-    // Extrai o setor (tudo que vem após CHR0001 ou o hífen/espaço)
     function extrairSetor(nome) {
         if (!nome) return 'Não Definido';
         const str = String(nome).trim();
 
-        // 1º Tenta pegar após separador hífen: ex: "CHR0001 - Estoque A" => "Estoque A"
         if (str.includes('-')) {
             const partes = str.split('-');
             if (partes.length > 1) {
@@ -1334,7 +1333,6 @@
             }
         }
 
-        // 2º Tenta remover a tag inicial (ex: "CHR0001 Estoque")
         const semTag = str.replace(/^[A-Za-z]+\s*\d+\s*[-_:]*\s*/i, '').trim();
         if (semTag) return semTag;
 
@@ -1390,17 +1388,14 @@
 
         let filtrados = [...(dados.coletores || [])];
 
-        // 1. Filtro por Planta
         if (filtroPlanta !== 'TODAS') {
             filtrados = filtrados.filter(c => c.plantaId === filtroPlanta);
         }
 
-        // 2. Filtro por Setor
         if (filtroSetor !== 'TODOS') {
             filtrados = filtrados.filter(c => extrairSetor(c.nome) === filtroSetor);
         }
 
-        // 3. Filtro textual
         if (filtroTexto) {
             filtrados = filtrados.filter(c => {
                 const n = normalizarTexto(c.nome);
@@ -1412,7 +1407,6 @@
             });
         }
 
-        // 4. Ordenação pelo identificador de referência (CHR0001, CHR0002...)
         filtrados.sort((a, b) => {
             const refA = extrairChaveReferenciaNome(a.nome);
             const refB = extrairChaveReferenciaNome(b.nome);
