@@ -207,7 +207,7 @@
             margin-left: auto;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         
@@ -224,6 +224,8 @@
         .form-group label { display: block; font-weight: 600; font-size: 13px; color: var(--text-main); margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
         .form-group input:focus, .form-group select:focus { outline: 2px solid #7c3aed; border-color: transparent; }
+        .form-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
         
         .select-with-button {
             display: flex;
@@ -340,12 +342,12 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(0, 0, 0, 0.75);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 999;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
         }
         .modal-content {
             background: var(--bg-container);
@@ -358,6 +360,7 @@
             padding: 24px;
             box-shadow: 0 15px 35px var(--shadow);
         }
+        .modal-content-sm { max-width: 580px; }
         .modal-content-lg { max-width: 900px; }
         .modal-content-xl { max-width: 1100px; }
         
@@ -368,6 +371,87 @@
             margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+        }
+
+        /* Modal StageNow: Exibição Individual em Tela Cheia no padrão do tema */
+        .modal-content-fullscreen {
+            width: 96vw;
+            max-width: 1200px;
+            height: 94vh;
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 25px;
+            background: var(--bg-container);
+        }
+
+        .stagenow-step-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stagenow-view-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .stagenow-view-box img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            box-shadow: 0 4px 18px var(--shadow);
+        }
+
+        .stagenow-view-box .qr-fullscreen {
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 18px var(--shadow);
+        }
+
+        .stagenow-view-box .qr-fullscreen canvas,
+        .stagenow-view-box .qr-fullscreen img {
+            width: 290px !important;
+            height: 290px !important;
+            display: block;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .stagenow-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         .filtros-modal-bar {
@@ -474,7 +558,7 @@
             max-width: 100%;
         }
 
-        .atalho-card .planta-badge {
+        .planta-badge {
             font-size: 11px;
             padding: 2px 8px;
             border-radius: 10px;
@@ -552,6 +636,9 @@
             <button class="btn btn-outline btn-sm" onclick="abrirModalTodosColetores()">
                 📋 Ver Todos os Coletores
             </button>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalStageNow()">
+                ⚡ StageNow & Senha
+            </button>
             <span style="font-size:13px; color:var(--text-muted); font-weight: 600;" id="totalInfo">Total: 0</span>
         </div>
     </div>
@@ -567,6 +654,7 @@
                 <div id="dadosExibicao" class="hidden">
                     <div class="dados-coletor">
                         <div class="campo"><span class="rotulo">Nome</span><span class="valor" id="exNome">-</span></div>
+                        <div class="campo"><span class="rotulo">Setor</span><span class="valor" id="exSetor">-</span></div>
                         <div class="campo"><span class="rotulo">Nº de Série</span><span class="valor" id="exSerie">-</span></div>
                         <div class="campo"><span class="rotulo">Endereço MAC</span><span class="valor" id="exMac">-</span></div>
                         <div class="campo"><span class="rotulo">Planta / Unidade</span><span class="valor" id="exPlanta">-</span></div>
@@ -613,10 +701,26 @@
                     <label for="fMac">Endereço MAC (12 dígitos hexadecimais)</label>
                     <input type="text" id="fMac" placeholder="00:1A:2B:3C:4D:5E" maxlength="17" oninput="formatarMAC(this)" style="text-transform: uppercase;">
                 </div>
-                <div class="form-group">
-                    <label for="fNome">Nome do Dispositivo *</label>
-                    <input type="text" id="fNome" placeholder="CHR0001 - Estoque A" required>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fNome">Nome do Dispositivo *</label>
+                        <input type="text" id="fNome" placeholder="Ex: CHR0001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fSetorSelect">Setor *</label>
+                        <select id="fSetorSelect" required onchange="aoMudarSelectSetorForm()">
+                            <option value="">Selecione um setor...</option>
+                            <option value="__NOVO__">➕ Cadastrar novo setor...</option>
+                        </select>
+                    </div>
                 </div>
+
+                <div class="form-group hidden" id="boxNovoSetorForm">
+                    <label for="fNovoSetorTexto" style="color:#7c3aed;">🏷️ Digite o Novo Setor *</label>
+                    <input type="text" id="fNovoSetorTexto" placeholder="Ex: Expedição, Estoque A, Recebimento">
+                </div>
+
                 <div class="form-group">
                     <label for="fIP">IP do Equipamento *</label>
                     <input type="text" id="fIP" placeholder="192.168.1.100" required>
@@ -649,6 +753,42 @@
         <span style="font-size:12px; color:var(--text-muted);">
             💾 Sincronização automática em tempo real
         </span>
+    </div>
+</div>
+
+<!-- MODAL: StageNow & Senha em Tela Cheia (1 por vez, navegação limpa sem botão concluir) -->
+<div id="modalStageNow" class="modal-overlay hidden">
+    <div class="modal-content modal-content-fullscreen">
+        <div class="modal-header">
+            <h3 style="font-size:18px;" id="tituloPassoStageNow">🔑 Senha ADM (Zebr@MC93)</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalStageNow()">✖ Fechar (Esc)</button>
+        </div>
+
+        <div class="stagenow-step-container">
+            <!-- Item 1: QR Senha (apenas o QR Code limpo) -->
+            <div id="stepStageNow0" class="stagenow-view-box">
+                <div class="qr-fullscreen" id="qrStageNowSenha"></div>
+            </div>
+
+            <!-- Item 2: Imagem 1 -->
+            <div id="stepStageNow1" class="stagenow-view-box hidden">
+                <img src="img1.png" alt="StageNow Parte 1" onerror="this.alt='Arquivo img1.png não encontrado na pasta raiz.';">
+            </div>
+
+            <!-- Item 3: Imagem 2 -->
+            <div id="stepStageNow2" class="stagenow-view-box hidden">
+                <img src="img2.png" alt="StageNow Parte 2" onerror="this.alt='Arquivo img2.png não encontrado na pasta raiz.';">
+            </div>
+        </div>
+
+        <div class="stagenow-nav-bar">
+            <button class="btn btn-outline" id="btnStageNowAnterior" onclick="mudarPassoStageNow(-1)">
+                ⬅️ Anterior
+            </button>
+            <button class="btn btn-primary" id="btnStageNowProximo" onclick="mudarPassoStageNow(1)">
+                Próximo ➡️
+            </button>
+        </div>
     </div>
 </div>
 
@@ -783,6 +923,7 @@
     let dados = { coletores: [], plantas: [], atalhos: [] };
     let editandoSerie = null;
     let ultimoId = 0;
+    let passoAtualStageNow = 0;
 
     function formatarMAC(input) {
         let valor = input.value.toUpperCase().replace(/[^0-9A-F]/g, '');
@@ -842,6 +983,10 @@
         if (!document.getElementById('modalAtalhos').classList.contains('hidden')) {
             renderizarAtalhosQR();
         }
+
+        if (!document.getElementById('modalStageNow').classList.contains('hidden')) {
+            gerarQRStageNow();
+        }
     }
 
     function alternarTema() {
@@ -857,6 +1002,24 @@
             aplicarTema(false);
         }
         carregarColetores();
+
+        // Atalhos de teclado no modal StageNow
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('modalStageNow');
+            if (modal && !modal.classList.contains('hidden')) {
+                if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                    if (passoAtualStageNow < 2) {
+                        mudarPassoStageNow(1);
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    if (passoAtualStageNow > 0) {
+                        mudarPassoStageNow(-1);
+                    }
+                } else if (e.key === 'Escape') {
+                    fecharModalStageNow();
+                }
+            }
+        });
     });
 
     async function carregarColetores() {
@@ -886,9 +1049,13 @@
                     }
                     c.plantaId = plantaExistente.id;
                 }
+                if (!c.setor) {
+                    c.setor = extrairSetor(c.nome);
+                }
             });
 
             popularSelectPlantas();
+            popularSelectSetoresForm();
             atualizarUltimoId();
             atualizarTotal();
             atualizarStatusServidor(true);
@@ -947,6 +1114,86 @@
         return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
 
+    function extrairSetor(nome) {
+        if (!nome) return 'Não Definido';
+        const str = String(nome).trim();
+
+        if (str.includes('-')) {
+            const partes = str.split('-');
+            if (partes.length > 1) {
+                const setor = partes.slice(1).join('-').trim();
+                if (setor) return setor;
+            }
+        }
+
+        const semTag = str.replace(/^[A-Za-z]+\s*\d+\s*[-_:]*\s*/i, '').trim();
+        if (semTag) return semTag;
+
+        return 'Geral';
+    }
+
+    function obterTodosSetoresUnicos() {
+        const setores = new Set();
+        (dados.coletores || []).forEach(c => {
+            const s = c.setor || extrairSetor(c.nome);
+            if (s && s !== 'Não Definido') setores.add(s);
+        });
+        return Array.from(setores).sort((a, b) => a.localeCompare(b));
+    }
+
+    function popularSelectSetoresForm(setorSelecionar = null) {
+        const select = document.getElementById('fSetorSelect');
+        select.innerHTML = '<option value="">Selecione um setor...</option><option value="__NOVO__">➕ Cadastrar novo setor...</option>';
+
+        const setores = obterTodosSetoresUnicos();
+        setores.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            select.insertBefore(opt, select.lastElementChild);
+        });
+
+        if (setorSelecionar) {
+            select.value = setorSelecionar;
+            aoMudarSelectSetorForm();
+        }
+    }
+
+    function aoMudarSelectSetorForm() {
+        const select = document.getElementById('fSetorSelect');
+        const boxNovo = document.getElementById('boxNovoSetorForm');
+        const inputNovo = document.getElementById('fNovoSetorTexto');
+
+        if (select.value === '__NOVO__') {
+            boxNovo.classList.remove('hidden');
+            inputNovo.required = true;
+            inputNovo.focus();
+        } else {
+            boxNovo.classList.add('hidden');
+            inputNovo.required = false;
+            inputNovo.value = '';
+        }
+    }
+
+    function formatarNomeParaQR(coletor) {
+        if (!coletor) return '-';
+
+        let nomeBase = String(coletor.nome || '').trim();
+        const setor = String(coletor.setor || extrairSetor(coletor.nome) || '').trim();
+
+        if (nomeBase.includes('-')) {
+            nomeBase = nomeBase.split('-')[0].trim();
+        }
+
+        nomeBase = nomeBase.replace(/\s*[-_:]+\s*/g, ' ').trim();
+        const setorLimpo = setor.replace(/\s*[-_:]+\s*/g, ' ').trim();
+
+        if (setorLimpo && setorLimpo !== 'Não Definido' && setorLimpo !== 'Geral') {
+            return `${nomeBase} ${setorLimpo}`.replace(/\s+/g, ' ').trim();
+        }
+        return nomeBase;
+    }
+
     function filtrarColetores(termo) {
         if (!dados.coletores || !termo) return [];
         const termoNorm = normalizarTexto(termo);
@@ -957,11 +1204,13 @@
 
         return dados.coletores.filter(c => {
             const nomeNorm = normalizarTexto(c.nome);
+            const setorNorm = normalizarTexto(c.setor || extrairSetor(c.nome));
             const serieNorm = normalizarTexto(c.serie);
             const macNorm = normalizarTexto(c.mac);
             const macLimpo = macNorm.replace(/[^0-9a-f]/g, '');
 
             return nomeNorm.includes(termoNorm) || 
+                   setorNorm.includes(termoNorm) || 
                    serieNorm.includes(termoNorm) || 
                    macNorm.includes(termoNorm) || 
                    (termoLimpo.length >= 3 && macLimpo.includes(termoLimpo));
@@ -1050,8 +1299,10 @@
 
     function exibirColetor(coletor) {
         const planta = encontrarPlanta(coletor.plantaId);
+        const setor = coletor.setor || extrairSetor(coletor.nome);
 
         document.getElementById('exNome').textContent = coletor.nome || '-';
+        document.getElementById('exSetor').textContent = setor;
         document.getElementById('exSerie').textContent = coletor.serie;
         document.getElementById('exMac').textContent = coletor.mac || '-';
         document.getElementById('exPlanta').textContent = planta ? planta.nome : 'Não definida';
@@ -1070,14 +1321,16 @@
         const grid = document.getElementById('qrGrid');
         grid.innerHTML = '';
 
-        // Ordem dos QR Codes: DNS 2 -> DNS 1 -> Gateway -> IP -> Senha Wi-Fi -> Nome
+        const nomeFormatadoQR = formatarNomeParaQR(coletor);
+
+        // Ordem: DNS 2 -> DNS 1 -> Gateway -> IP -> Senha Wi-Fi -> Nome
         const campos = [
             { label: 'DNS 2', valor: dns2 },
             { label: 'DNS 1', valor: dns1 },
             { label: 'Gateway', valor: gateway },
             { label: 'IP', valor: coletor.ip || '-' },
             { label: 'Senha Wi-Fi', valor: senhaWifi },
-            { label: 'Nome', valor: coletor.nome || '-' }
+            { label: 'Nome', valor: nomeFormatadoQR }
         ];
 
         const isDark = document.body.classList.contains('dark-mode');
@@ -1170,6 +1423,10 @@
         document.getElementById('fSerie').disabled = true;
         document.getElementById('fMac').value = coletor.mac || '';
         document.getElementById('fNome').value = coletor.nome || '';
+
+        const setorAtual = coletor.setor || extrairSetor(coletor.nome);
+        popularSelectSetoresForm(setorAtual);
+
         document.getElementById('fIP').value = coletor.ip || '';
         document.getElementById('fPlanta').value = coletor.plantaId || '';
         atualizarPreviewPlanta();
@@ -1191,6 +1448,9 @@
         editandoSerie = null;
         document.getElementById('fSerie').disabled = false;
         document.getElementById('formColetor').reset();
+        document.getElementById('boxNovoSetorForm').classList.add('hidden');
+        document.getElementById('fNovoSetorTexto').required = false;
+        popularSelectSetoresForm();
         document.getElementById('formTitulo').textContent = '➕ Novo Coletor';
         document.getElementById('formBadge').textContent = 'Cadastro';
         document.getElementById('btnSalvar').textContent = '💾 Salvar';
@@ -1204,8 +1464,24 @@
         const serie = document.getElementById('fSerie').value.trim();
         const mac = document.getElementById('fMac').value.trim().toUpperCase();
         const nome = document.getElementById('fNome').value.trim();
+        const selectSetor = document.getElementById('fSetorSelect').value;
+        const inputNovoSetor = document.getElementById('fNovoSetorTexto').value.trim();
         const ip = document.getElementById('fIP').value.trim();
         const plantaId = document.getElementById('fPlanta').value;
+
+        let setorFinal = selectSetor;
+        if (selectSetor === '__NOVO__') {
+            if (!inputNovoSetor) {
+                mostrarMensagemForm('Por favor, informe o nome do novo setor.', 'error');
+                return;
+            }
+            setorFinal = inputNovoSetor;
+        }
+
+        if (!setorFinal) {
+            mostrarMensagemForm('Selecione ou cadastre um setor para o coletor.', 'error');
+            return;
+        }
 
         if (serie.length !== 14 || !/^\d{14}$/.test(serie)) {
             mostrarMensagemForm('Série deve ter 14 dígitos numéricos.', 'error');
@@ -1247,6 +1523,7 @@
         const coletor = {
             id: existente ? existente.id : (ultimoId + 1),
             nome,
+            setor: setorFinal,
             serie,
             mac,
             ip,
@@ -1266,6 +1543,7 @@
             mostrarMensagemForm('✅ Salvo no coletores.json com sucesso!', 'success');
             atualizarUltimoId();
             atualizarTotal();
+            popularSelectSetoresForm();
             exibirColetor(coletor);
             cancelarEdicao();
             if (!document.getElementById('modalTodosColetores').classList.contains('hidden')) {
@@ -1286,6 +1564,7 @@
         if (salvou) {
             atualizarUltimoId();
             atualizarTotal();
+            popularSelectSetoresForm();
             limparBusca();
             mostrarMensagem('Coletor excluído com sucesso.', 'success');
             if (!document.getElementById('modalTodosColetores').classList.contains('hidden')) {
@@ -1304,8 +1583,71 @@
         el.classList.remove('hidden');
     }
 
+    // =======================================================
+    //  MODAL: STAGENOW EM TELA CHEIA (NAVEGAÇÃO LIMPA)
+    // =======================================================
+    const titulosStageNow = [
+        "🔑 Senha ADM (Zebr@MC93)",
+        "📲 StageNow - Parte 1 de 2",
+        "📲 StageNow - Parte 2 de 2"
+    ];
+
+    function abrirModalStageNow() {
+        passoAtualStageNow = 0;
+        document.getElementById('modalStageNow').classList.remove('hidden');
+        gerarQRStageNow();
+        atualizarVisualizacaoStageNow();
+    }
+
+    function fecharModalStageNow() {
+        document.getElementById('modalStageNow').classList.add('hidden');
+    }
+
+    function mudarPassoStageNow(direcao) {
+        passoAtualStageNow += direcao;
+        if (passoAtualStageNow < 0) passoAtualStageNow = 0;
+        if (passoAtualStageNow > 2) passoAtualStageNow = 2;
+        atualizarVisualizacaoStageNow();
+    }
+
+    function atualizarVisualizacaoStageNow() {
+        for (let i = 0; i < 3; i++) {
+            const el = document.getElementById(`stepStageNow${i}`);
+            if (i === passoAtualStageNow) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('tituloPassoStageNow').textContent = titulosStageNow[passoAtualStageNow];
+
+        const btnAnt = document.getElementById('btnStageNowAnterior');
+        const btnProx = document.getElementById('btnStageNowProximo');
+
+        btnAnt.disabled = (passoAtualStageNow === 0);
+        btnAnt.style.opacity = (passoAtualStageNow === 0) ? '0.4' : '1';
+
+        btnProx.disabled = (passoAtualStageNow === 2);
+        btnProx.style.opacity = (passoAtualStageNow === 2) ? '0.4' : '1';
+    }
+
+    function gerarQRStageNow() {
+        const container = document.getElementById('qrStageNowSenha');
+        container.innerHTML = '';
+
+        new QRCode(container, {
+            text: 'Zebr@MC93',
+            width: 290,
+            height: 290,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+
     // ==========================================
-    //  EXTRAÇÃO DE REFERÊNCIA E SETOR
+    //  MODAL: LISTAGEM GERAL COM FILTRO DE SETOR
     // ==========================================
     function extrairChaveReferenciaNome(nome) {
         if (!nome) return { prefixo: '', numero: 0, original: '' };
@@ -1321,40 +1663,13 @@
         return { prefixo: nome.toLowerCase(), numero: 0, original: nome.toLowerCase() };
     }
 
-    function extrairSetor(nome) {
-        if (!nome) return 'Não Definido';
-        const str = String(nome).trim();
-
-        if (str.includes('-')) {
-            const partes = str.split('-');
-            if (partes.length > 1) {
-                const setor = partes.slice(1).join('-').trim();
-                if (setor) return setor;
-            }
-        }
-
-        const semTag = str.replace(/^[A-Za-z]+\s*\d+\s*[-_:]*\s*/i, '').trim();
-        if (semTag) return semTag;
-
-        return 'Geral';
-    }
-
-    // ==========================================
-    //  MODAL: LISTAGEM GERAL COM FILTRO DE SETOR
-    // ==========================================
     function popularSelectSetores() {
         const selectSetor = document.getElementById('filtroModalSetor');
         const valorAtual = selectSetor.value;
         selectSetor.innerHTML = '<option value="TODOS">Todos os Setores</option>';
 
-        const setoresUnicos = new Set();
-        (dados.coletores || []).forEach(c => {
-            const setor = extrairSetor(c.nome);
-            if (setor) setoresUnicos.add(setor);
-        });
-
-        const listaOrdenada = Array.from(setoresUnicos).sort((a, b) => a.localeCompare(b));
-        listaOrdenada.forEach(setor => {
+        const setores = obterTodosSetoresUnicos();
+        setores.forEach(setor => {
             const opt = document.createElement('option');
             opt.value = setor;
             opt.textContent = setor;
@@ -1393,7 +1708,7 @@
         }
 
         if (filtroSetor !== 'TODOS') {
-            filtrados = filtrados.filter(c => extrairSetor(c.nome) === filtroSetor);
+            filtrados = filtrados.filter(c => (c.setor || extrairSetor(c.nome)) === filtroSetor);
         }
 
         if (filtroTexto) {
@@ -1402,7 +1717,7 @@
                 const s = normalizarTexto(c.serie);
                 const m = normalizarTexto(c.mac);
                 const ip = normalizarTexto(c.ip);
-                const setor = normalizarTexto(extrairSetor(c.nome));
+                const setor = normalizarTexto(c.setor || extrairSetor(c.nome));
                 return n.includes(filtroTexto) || s.includes(filtroTexto) || m.includes(filtroTexto) || ip.includes(filtroTexto) || setor.includes(filtroTexto);
             });
         }
@@ -1430,7 +1745,7 @@
         filtrados.forEach(c => {
             const planta = encontrarPlanta(c.plantaId);
             const nomePlanta = planta ? planta.nome : '<span style="color:var(--text-muted);">Sem Planta</span>';
-            const setor = extrairSetor(c.nome);
+            const setor = c.setor || extrairSetor(c.nome);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${c.nome || '-'}</strong></td>
