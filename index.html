@@ -237,9 +237,35 @@
 
         .dados-coletor { background: var(--bg-dados); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px var(--shadow-subtle); margin-top: 10px; border: 1px solid var(--border-item); }
         .dados-coletor .campo { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-item); }
-        .dados-coletor .campo:last-child { border-bottom: none; }
         .dados-coletor .rotulo { font-weight: 500; color: var(--text-label); }
         .dados-coletor .valor { font-weight: 600; color: var(--text-main); word-break: break-all; text-align: right; max-width: 65%; }
+
+        /* Dados de rede recolhíveis */
+        .dados-rede-ocultos {
+            margin-top: 2px;
+        }
+
+        /* Botão expansor que acompanha a base do bloco */
+        .btn-toggle-rede {
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            color: var(--text-label);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        .btn-toggle-rede:hover {
+            background: var(--btn-outline-hover);
+        }
         
         .planta-preview-box {
             background: var(--bg-panel);
@@ -371,6 +397,38 @@
             margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+        }
+
+        /* Modal de Confirmação Personalizado */
+        .modal-confirmacao-box {
+            max-width: 440px;
+            text-align: center;
+            padding: 24px 28px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow);
+        }
+        .modal-confirmacao-box .icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        .modal-confirmacao-box h3 {
+            font-size: 17px;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+        .modal-confirmacao-box p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 22px;
+            word-break: break-word;
+        }
+        .modal-confirmacao-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
         }
 
         /* Modal StageNow: Exibição Individual em Tela Cheia no padrão do tema */
@@ -653,17 +711,28 @@
                 <div id="mensagemResultado" class="msg msg-info" style="display:none;"></div>
                 <div id="dadosExibicao" class="hidden">
                     <div class="dados-coletor">
+                        <!-- Dados Principais Reordenados -->
                         <div class="campo"><span class="rotulo">Nome</span><span class="valor" id="exNome">-</span></div>
                         <div class="campo"><span class="rotulo">Setor</span><span class="valor" id="exSetor">-</span></div>
+                        <div class="campo"><span class="rotulo">Planta / Unidade</span><span class="valor" id="exPlanta">-</span></div>
                         <div class="campo"><span class="rotulo">Nº de Série</span><span class="valor" id="exSerie">-</span></div>
                         <div class="campo"><span class="rotulo">Endereço MAC</span><span class="valor" id="exMac">-</span></div>
-                        <div class="campo"><span class="rotulo">Planta / Unidade</span><span class="valor" id="exPlanta">-</span></div>
-                        <div class="campo"><span class="rotulo">IP</span><span class="valor" id="exIP">-</span></div>
-                        <div class="campo"><span class="rotulo">Gateway</span><span class="valor" id="exGateway">-</span></div>
-                        <div class="campo"><span class="rotulo">DNS 1</span><span class="valor" id="exDNS1">-</span></div>
-                        <div class="campo"><span class="rotulo">DNS 2</span><span class="valor" id="exDNS2">-</span></div>
-                        <div class="campo"><span class="rotulo">Senha Wi-Fi</span><span class="valor" id="exSenha">-</span></div>
+
+                        <!-- Dados de rede ocultos por padrão (abrem ACIMA do botão) -->
+                        <div id="dadosRedeContainer" class="dados-rede-ocultos hidden">
+                            <div class="campo"><span class="rotulo">IP</span><span class="valor" id="exIP">-</span></div>
+                            <div class="campo"><span class="rotulo">Gateway</span><span class="valor" id="exGateway">-</span></div>
+                            <div class="campo"><span class="rotulo">DNS 1</span><span class="valor" id="exDNS1">-</span></div>
+                            <div class="campo"><span class="rotulo">DNS 2</span><span class="valor" id="exDNS2">-</span></div>
+                            <div class="campo"><span class="rotulo">Senha Wi-Fi</span><span class="valor" id="exSenha">-</span></div>
+                        </div>
+
+                        <!-- Botão com setinha posicionado no fim da div: desce ao exibir e sobe ao ocultar -->
+                        <button type="button" class="btn-toggle-rede" id="btnToggleRede" onclick="alternarDetalhesRede()">
+                            <span id="iconeToggleRede">⬇️</span> <span id="textoToggleRede">Ver detalhes de rede (IP, Gateway, DNS...)</span>
+                        </button>
                     </div>
+
                     <div style="margin-top:15px;">
                         <div style="font-weight:600; font-size:14px; color:var(--text-main);">📲 QR Codes para configuração</div>
                         <div class="qr-grid" id="qrGrid"></div>
@@ -756,7 +825,20 @@
     </div>
 </div>
 
-<!-- MODAL: StageNow & Senha em Tela Cheia (1 por vez, navegação limpa sem botão concluir) -->
+<!-- MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA (Substitui confirm do navegador) -->
+<div id="modalConfirmacaoSistema" class="modal-overlay hidden">
+    <div class="modal-content modal-confirmacao-box">
+        <span class="icon" id="confirmIcon">⚠️</span>
+        <h3 id="confirmTitulo">Confirmação</h3>
+        <p id="confirmMensagem">Tem certeza que deseja prosseguir?</p>
+        <div class="modal-confirmacao-actions">
+            <button class="btn btn-outline btn-sm" id="btnConfirmCancelar">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="btnConfirmConfirmar">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: StageNow & Senha em Tela Cheia (1 por vez) -->
 <div id="modalStageNow" class="modal-overlay hidden">
     <div class="modal-content modal-content-fullscreen">
         <div class="modal-header">
@@ -765,7 +847,7 @@
         </div>
 
         <div class="stagenow-step-container">
-            <!-- Item 1: QR Senha (apenas o QR Code limpo) -->
+            <!-- Item 1: QR Senha -->
             <div id="stepStageNow0" class="stagenow-view-box">
                 <div class="qr-fullscreen" id="qrStageNowSenha"></div>
             </div>
@@ -924,6 +1006,61 @@
     let editandoSerie = null;
     let ultimoId = 0;
     let passoAtualStageNow = 0;
+
+    // ==========================================
+    //  TOGGLE DE DETALHES DE REDE OCULTOS
+    // ==========================================
+    function alternarDetalhesRede() {
+        const container = document.getElementById('dadosRedeContainer');
+        const icone = document.getElementById('iconeToggleRede');
+        const texto = document.getElementById('textoToggleRede');
+
+        const estaOculto = container.classList.contains('hidden');
+        if (estaOculto) {
+            container.classList.remove('hidden');
+            icone.textContent = '⬆️';
+            texto.textContent = 'Ocultar detalhes de rede';
+        } else {
+            container.classList.add('hidden');
+            icone.textContent = '⬇️';
+            texto.textContent = 'Ver detalhes de rede (IP, Gateway, DNS...)';
+        }
+    }
+
+    // ==========================================
+    //  MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA
+    // ==========================================
+    function pedirConfirmacao(mensagem, titulo = 'Confirmação', textoBtnConfirmar = 'Confirmar', icone = '⚠️', tipoBtn = 'btn-primary') {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modalConfirmacaoSistema');
+            const elTitulo = document.getElementById('confirmTitulo');
+            const elMsg = document.getElementById('confirmMensagem');
+            const elIcon = document.getElementById('confirmIcon');
+            const btnConfirmar = document.getElementById('btnConfirmConfirmar');
+            const btnCancelar = document.getElementById('btnConfirmCancelar');
+
+            elTitulo.textContent = titulo;
+            elMsg.textContent = mensagem;
+            elIcon.textContent = icone;
+            btnConfirmar.textContent = textoBtnConfirmar;
+            btnConfirmar.className = `btn btn-sm ${tipoBtn}`;
+
+            modal.classList.remove('hidden');
+
+            const fechar = (resposta) => {
+                modal.classList.add('hidden');
+                btnConfirmar.removeEventListener('click', confirmarHandler);
+                btnCancelar.removeEventListener('click', cancelarHandler);
+                resolve(resposta);
+            };
+
+            const confirmarHandler = () => fechar(true);
+            const cancelarHandler = () => fechar(false);
+
+            btnConfirmar.addEventListener('click', confirmarHandler);
+            btnCancelar.addEventListener('click', cancelarHandler);
+        });
+    }
 
     function formatarMAC(input) {
         let valor = input.value.toUpperCase().replace(/[^0-9A-F]/g, '');
@@ -1303,20 +1440,25 @@
 
         document.getElementById('exNome').textContent = coletor.nome || '-';
         document.getElementById('exSetor').textContent = setor;
+        document.getElementById('exPlanta').textContent = planta ? planta.nome : 'Não definida';
         document.getElementById('exSerie').textContent = coletor.serie;
         document.getElementById('exMac').textContent = coletor.mac || '-';
-        document.getElementById('exPlanta').textContent = planta ? planta.nome : 'Não definida';
-        document.getElementById('exIP').textContent = coletor.ip || '-';
 
         const gateway = planta ? planta.gateway : (coletor.gateway || '-');
         const dns1 = planta ? planta.dns1 : (coletor.dns1 || '-');
         const dns2 = planta ? planta.dns2 : (coletor.dns2 || '-');
         const senhaWifi = planta ? planta.senhaWifi : (coletor.senhaWifi || '-');
 
+        document.getElementById('exIP').textContent = coletor.ip || '-';
         document.getElementById('exGateway').textContent = gateway;
         document.getElementById('exDNS1').textContent = dns1;
         document.getElementById('exDNS2').textContent = dns2;
         document.getElementById('exSenha').textContent = senhaWifi;
+
+        // Reseta o estado para oculto sempre que carrega um novo coletor
+        document.getElementById('dadosRedeContainer').classList.add('hidden');
+        document.getElementById('iconeToggleRede').textContent = '⬇️';
+        document.getElementById('textoToggleRede').textContent = 'Ver detalhes de rede (IP, Gateway, DNS...)';
 
         const grid = document.getElementById('qrGrid');
         grid.innerHTML = '';
@@ -1557,7 +1699,14 @@
 
     async function excluirColetor(serieInformada = null) {
         const serie = serieInformada || document.getElementById('dadosExibicao').dataset.serie;
-        if (!confirm(`Deseja excluir o coletor ${serie}?`)) return;
+        const confirmou = await pedirConfirmacao(
+            `Deseja realmente excluir o coletor ${serie}? Esta ação removerá o dispositivo da base.`,
+            'Excluir Coletor',
+            'Sim, Excluir',
+            '🗑️',
+            'btn-danger'
+        );
+        if (!confirmou) return;
 
         dados.coletores = dados.coletores.filter(c => String(c.serie).trim() !== String(serie).trim());
         const salvou = await persistirNoServidor();
@@ -1581,6 +1730,46 @@
         el.textContent = texto;
         el.className = `msg msg-${tipo}`;
         el.classList.remove('hidden');
+    }
+
+    // ==========================================
+    //  ENVIO VIA USB (MTP)
+    // ==========================================
+    async function enviarArquivosUSB() {
+        const confirmou = await pedirConfirmacao(
+            'Deseja transferir todos os arquivos diretamente para o coletor MC3300x?',
+            'Carga via USB (MTP)',
+            'Transferir Arquivos',
+            '📥',
+            'btn-primary'
+        );
+        if (!confirmou) return;
+
+        mostrarMensagem('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
+
+        try {
+            const response = await fetch('/api/enviar-usb', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const rawText = await response.text();
+            let json = {};
+            try {
+                json = JSON.parse(rawText);
+            } catch (e) {
+                json = { status: response.ok ? 'ok' : 'erro', mensagem: rawText };
+            }
+
+            if (response.ok && json.status === 'ok') {
+                mostrarMensagem(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
+            } else {
+                mostrarMensagem(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
+        }
     }
 
     // =======================================================
@@ -1779,39 +1968,6 @@
     }
 
     // ==========================================
-    //  ENVIO VIA USB (MTP)
-    // ==========================================
-    async function enviarArquivosUSB() {
-        if (!confirm('Deseja transferir todos os arquivos da pasta "arquivos_carga" diretamente para o MC3300x?')) return;
-
-        mostrarMensagem('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
-
-        try {
-            const response = await fetch('/api/enviar-usb', { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            
-            const rawText = await response.text();
-            let json = {};
-            try {
-                json = JSON.parse(rawText);
-            } catch (e) {
-                json = { status: response.ok ? 'ok' : 'erro', mensagem: rawText };
-            }
-
-            if (response.ok && json.status === 'ok') {
-                mostrarMensagem(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
-            } else {
-                mostrarMensagem(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            mostrarMensagem('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
-        }
-    }
-
-    // ==========================================
     //  GERENCIAMENTO DE PLANTAS (MODAL)
     // ==========================================
     function abrirModalPlantas() {
@@ -1883,13 +2039,19 @@
         const vinculados = dados.coletores.filter(c => c.plantaId === id).length;
         const atalhosVinculados = dados.atalhos.filter(a => a.plantaId === id).length;
 
+        let msg = 'Deseja realmente excluir esta planta?';
         if (vinculados > 0 || atalhosVinculados > 0) {
-            if (!confirm(`Existem ${vinculados} coletor(es) e ${atalhosVinculados} atalho(s) vinculados a esta planta. Deseja realmente excluir?`)) {
-                return;
-            }
-        } else {
-            if (!confirm('Deseja excluir esta planta?')) return;
+            msg = `Existem ${vinculados} coletor(es) e ${atalhosVinculados} atalho(s) vinculados a esta planta. Deseja realmente excluir?`;
         }
+
+        const confirmou = await pedirConfirmacao(
+            msg,
+            'Excluir Planta',
+            'Sim, Excluir',
+            '🏢',
+            'btn-danger'
+        );
+        if (!confirmou) return;
 
         dados.plantas = dados.plantas.filter(p => p.id !== id);
         await persistirNoServidor();
@@ -2014,7 +2176,14 @@
     }
 
     async function excluirAtalho(id) {
-        if (!confirm('Deseja realmente excluir este atalho?')) return;
+        const confirmou = await pedirConfirmacao(
+            'Deseja realmente excluir este atalho?',
+            'Excluir Atalho',
+            'Sim, Excluir',
+            '🗑️',
+            'btn-danger'
+        );
+        if (!confirmou) return;
 
         dados.atalhos = dados.atalhos.filter(a => a.id !== id);
         await persistirNoServidor();
