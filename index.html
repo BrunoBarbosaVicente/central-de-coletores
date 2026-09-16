@@ -412,7 +412,7 @@
             padding-bottom: 10px;
         }
 
-        /* Overlay do Modal de Confirmação com z-index superior para ficar por cima de qualquer modal */
+        /* Overlay do Modal de Confirmação com z-index superior */
         .modal-confirmacao-overlay {
             z-index: 1100 !important;
         }
@@ -846,7 +846,7 @@
     </div>
 </div>
 
-<!-- MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA (z-index superior configurado via CSS) -->
+<!-- MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA -->
 <div id="modalConfirmacaoSistema" class="modal-overlay modal-confirmacao-overlay hidden">
     <div class="modal-content modal-confirmacao-box">
         <span class="icon" id="confirmIcon">⚠️</span>
@@ -1718,7 +1718,9 @@
             plantaId
         };
 
-        if (editandoSerie !== null) {
+        const eraEdicao = (editandoSerie !== null);
+
+        if (eraEdicao) {
             const idx = dados.coletores.findIndex(c => String(c.serie).trim() === editandoSerie);
             if (idx !== -1) dados.coletores[idx] = coletor;
         } else {
@@ -1728,12 +1730,28 @@
 
         const salvou = await persistirNoServidor();
         if (salvou) {
-            mostrarMensagemForm('✅ Salvo no coletores.json com sucesso!', 'success');
             atualizarUltimoId();
             atualizarTotal();
+
+            // Reseta o estado e limpa os campos sem apagar o alerta
+            editandoSerie = null;
+            document.getElementById('fSerie').disabled = false;
+            document.getElementById('formColetor').reset();
+            document.getElementById('boxNovoSetorForm').classList.add('hidden');
+            document.getElementById('fNovoSetorTexto').required = false;
             popularSelectSetoresForm();
+            document.getElementById('formTitulo').textContent = '➕ Novo Coletor';
+            document.getElementById('formBadge').textContent = 'Cadastro';
+            document.getElementById('btnSalvar').textContent = '💾 Salvar';
+            atualizarPreviewPlanta();
+
+            // Atualiza os dados no quadro da esquerda
             exibirColetor(coletor);
-            cancelarEdicao();
+
+            // Mensagem de sucesso garantida na tela
+            const msgTexto = eraEdicao ? '✅ Coletor atualizado com sucesso!' : '✅ Coletor cadastrado e salvo com sucesso!';
+            mostrarMensagemForm(msgTexto, 'success');
+
             if (!document.getElementById('modalTodosColetores').classList.contains('hidden')) {
                 popularSelectSetores();
                 renderizarTabelaColetores();
