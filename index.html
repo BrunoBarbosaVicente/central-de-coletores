@@ -237,6 +237,7 @@
 
         .dados-coletor { background: var(--bg-dados); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px var(--shadow-subtle); margin-top: 10px; border: 1px solid var(--border-item); }
         .dados-coletor .campo { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-item); }
+        .dados-coletor .campo:last-child { border-bottom: none; }
         .dados-coletor .rotulo { font-weight: 500; color: var(--text-label); }
         .dados-coletor .valor { font-weight: 600; color: var(--text-main); word-break: break-all; text-align: right; max-width: 65%; }
 
@@ -344,6 +345,18 @@
             flex-wrap: wrap;
             align-items: center;
         }
+
+        /* Mensagem de status USB logo abaixo dos botões de ação */
+        .msg-usb-container {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+            transition: 0.2s;
+        }
         
         .hidden { display: none !important; }
         .msg { padding: 10px 14px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
@@ -364,7 +377,7 @@
             margin-top: 10px;
         }
 
-        /* Modais */
+        /* Modais Base */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -397,6 +410,11 @@
             margin-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
+        }
+
+        /* Overlay do Modal de Confirmação com z-index superior para ficar por cima de qualquer modal */
+        .modal-confirmacao-overlay {
+            z-index: 1100 !important;
         }
 
         /* Modal de Confirmação Personalizado */
@@ -751,6 +769,9 @@
                                 🔖 Nome dos Atalhos
                             </button>
                         </div>
+
+                        <!-- Mensagem de Status USB exibida logo abaixo do botão -->
+                        <div id="msgStatusUSB" class="msg-usb-container"></div>
                     </div>
                 </div>
             </div>
@@ -825,8 +846,8 @@
     </div>
 </div>
 
-<!-- MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA (Substitui confirm do navegador) -->
-<div id="modalConfirmacaoSistema" class="modal-overlay hidden">
+<!-- MODAL DE CONFIRMAÇÃO DO PRÓPRIO SISTEMA (z-index superior configurado via CSS) -->
+<div id="modalConfirmacaoSistema" class="modal-overlay modal-confirmacao-overlay hidden">
     <div class="modal-content modal-confirmacao-box">
         <span class="icon" id="confirmIcon">⚠️</span>
         <h3 id="confirmTitulo">Confirmação</h3>
@@ -988,10 +1009,10 @@
                     <tr>
                         <th>Nome</th>
                         <th>Setor</th>
+                        <th>Planta</th>
                         <th>Nº de Série</th>
                         <th>MAC</th>
                         <th>IP</th>
-                        <th>Planta</th>
                         <th style="text-align:center;">Ações</th>
                     </tr>
                 </thead>
@@ -1361,12 +1382,30 @@
         el.style.display = 'block';
     }
 
+    // Exibe a mensagem de feedback especificamente abaixo do botão USB
+    function mostrarMensagemStatusUSB(texto, tipo = 'info') {
+        const el = document.getElementById('msgStatusUSB');
+        if (!el) return;
+        el.innerHTML = texto;
+        el.className = `msg-usb-container msg-${tipo}`;
+        el.style.display = 'block';
+    }
+
+    function limparMensagemStatusUSB() {
+        const el = document.getElementById('msgStatusUSB');
+        if (el) {
+            el.style.display = 'none';
+            el.innerHTML = '';
+        }
+    }
+
     function limparBusca() {
         document.getElementById('buscaSerie').value = '';
         document.getElementById('dadosExibicao').classList.add('hidden');
         document.getElementById('dadosExibicao').dataset.serie = '';
         document.getElementById('dadosExibicao').dataset.plantaId = '';
         document.getElementById('mensagemResultado').style.display = 'none';
+        limparMensagemStatusUSB();
         document.getElementById('statusBadge').textContent = 'Nenhum';
         document.getElementById('statusBadge').className = 'badge';
         cancelarEdicao();
@@ -1380,6 +1419,7 @@
             document.getElementById('statusBadge').textContent = 'Encontrado';
             document.getElementById('statusBadge').className = 'badge badge-success';
             document.getElementById('mensagemResultado').style.display = 'none';
+            limparMensagemStatusUSB();
             preencherFormularioEdicao(coletor);
         }
     }
@@ -1401,9 +1441,11 @@
             document.getElementById('statusBadge').textContent = 'Encontrado';
             document.getElementById('statusBadge').className = 'badge badge-success';
             document.getElementById('mensagemResultado').style.display = 'none';
+            limparMensagemStatusUSB();
             preencherFormularioEdicao(coletor);
         } else if (resultados.length > 1) {
             document.getElementById('dadosExibicao').classList.add('hidden');
+            limparMensagemStatusUSB();
             document.getElementById('statusBadge').textContent = `${resultados.length} encontrados`;
             document.getElementById('statusBadge').className = 'badge badge-success';
 
@@ -1415,6 +1457,7 @@
             mostrarMensagem(html, 'info');
         } else {
             document.getElementById('dadosExibicao').classList.add('hidden');
+            limparMensagemStatusUSB();
             document.getElementById('dadosExibicao').dataset.serie = '';
             document.getElementById('dadosExibicao').dataset.plantaId = '';
             document.getElementById('statusBadge').textContent = 'Não encontrado';
@@ -1459,6 +1502,9 @@
         document.getElementById('dadosRedeContainer').classList.add('hidden');
         document.getElementById('iconeToggleRede').textContent = '⬇️';
         document.getElementById('textoToggleRede').textContent = 'Ver detalhes de rede (IP, Gateway, DNS...)';
+
+        // Reseta status USB
+        limparMensagemStatusUSB();
 
         const grid = document.getElementById('qrGrid');
         grid.innerHTML = '';
@@ -1733,7 +1779,7 @@
     }
 
     // ==========================================
-    //  ENVIO VIA USB (MTP)
+    //  ENVIO VIA USB (MTP) - Mensagem abaixo do botão
     // ==========================================
     async function enviarArquivosUSB() {
         const confirmou = await pedirConfirmacao(
@@ -1745,7 +1791,7 @@
         );
         if (!confirmou) return;
 
-        mostrarMensagem('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
+        mostrarMensagemStatusUSB('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
 
         try {
             const response = await fetch('/api/enviar-usb', { 
@@ -1762,13 +1808,13 @@
             }
 
             if (response.ok && json.status === 'ok') {
-                mostrarMensagem(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
+                mostrarMensagemStatusUSB(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
             } else {
-                mostrarMensagem(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
+                mostrarMensagemStatusUSB(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
             }
         } catch (e) {
             console.error(e);
-            mostrarMensagem('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
+            mostrarMensagemStatusUSB('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
         }
     }
 
@@ -1939,10 +1985,10 @@
             tr.innerHTML = `
                 <td><strong>${c.nome || '-'}</strong></td>
                 <td><span class="badge-setor">${setor}</span></td>
+                <td>${nomePlanta}</td>
                 <td>${c.serie}</td>
                 <td><code>${c.mac || '-'}</code></td>
                 <td>${c.ip || '-'}</td>
-                <td>${nomePlanta}</td>
                 <td style="text-align:center; white-space:nowrap;">
                     <button class="btn btn-primary btn-sm" style="padding:4px 10px; font-size:12px;" onclick="carregarColetorPeloModal('${c.serie}')">👁️ Ver</button>
                     <button class="btn btn-warning btn-sm" style="padding:4px 10px; font-size:12px;" onclick="editarColetorPeloModal('${c.serie}')">✏️</button>

@@ -1,209 +1,326 @@
-# Servidor_Central.ps1
+# ==============================================================================
+# Servidor Central de Coletores - Toyota / Field Services
+# ==============================================================================
+
 $porta = 5454
-$pasta = Split-Path -Parent $MyInvocation.MyCommand.Path
-$url = "http://localhost:$porta"
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Central de Coletores - Servidor Local" -ForegroundColor Yellow
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Pasta: $pasta"
-Write-Host "URL: $url"
-Write-Host ""
+# Identifica o caminho do diretorio
+$pastaRaiz = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($pastaRaiz)) {
+    $pastaRaiz = Split-Path -Parent $MyInvocation.MyCommand.Definition
+}
+if ([string]::IsNullOrWhiteSpace($pastaRaiz)) {
+    $pastaRaiz = (Get-Location).Path
+}
 
-# Abre o navegador automaticamente
-Start-Process $url
+Set-Location $pastaRaiz
 
-# Cria o servidor HTTP
+$pastaCarga = Join-Path $pastaRaiz "arquivos_carga"
+if (-not (Test-Path $pastaCarga)) {
+    New-Item -ItemType Directory -Path $pastaCarga -Force | Out-Null
+}
+
+# Inicializa o Listener HTTP
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$porta/")
-$listener.Start()
-Write-Host "Servidor rodando em $url" -ForegroundColor Green
-Write-Host "Pressione Ctrl+C para parar." -ForegroundColor Red
+$listener.Prefixes.Add("http://127.0.0.1:$porta/")
 
-# Função para localizar o MC3300x e copiar sem travar a requisição
-function Copiar-ParaZebraMTP($origemPasta) {
-    $shell = New-Object -ComObject Shell.Application
-    # 17 = ssfDRIVES (Este Computador)
-    $esteComputador = $shell.Namespace(17)
+try {
+    $listener.Start()
+} catch {
+    Clear-Host
+    Write-Host ""
+    Write-Host "  [ERRO] A porta $porta esta ocupada ou bloqueada por outra instancia." -ForegroundColor Red
+    Write-Host "  Feche outras janelas de terminal abertas e tente novamente." -ForegroundColor Yellow
+    Write-Host ""
+    Read-Host "  Pressione Enter para fechar..."
+    exit
+}
 
-    $pastaDownloadMTP = $null
-    $nomeColetor = ""
+# ------------------------------------------------------------------------------
+# APRESENTACAO VISUAL
+# ------------------------------------------------------------------------------
+Clear-Host
 
-    foreach ($item in $esteComputador.Items()) {
-        if ($item.Name -match "MC3300|Zebra" -or ($null -ne $item.GetFolder -and $item.Type -match "Portátil|Portable|Dispositivo")) {
-            $dispFolder = $item.GetFolder
-            if ($null -ne $dispFolder) {
-                foreach ($particao in $dispFolder.Items()) {
-                    if ($particao.Name -match "Divis[aã]o interna|Armazenamento|Internal") {
-                        $particaoFolder = $particao.GetFolder
-                        if ($null -ne $particaoFolder) {
-                            foreach ($pastaInterna in $particaoFolder.Items()) {
-                                if ($pastaInterna.Name -eq "Download") {
-                                    $pastaDownloadMTP = $pastaInterna.GetFolder
-                                    $nomeColetor = $item.Name
-                                    break
-                                }
-                            }
-                        }
-                    }
-                    if ($null -ne $pastaDownloadMTP) { break }
-                }
-            }
-        }
-        if ($null -ne $pastaDownloadMTP) { break }
+Write-Host ""
+Write-Host "  +-----------------------------------------------------------------------------+" -ForegroundColor DarkCyan
+Write-Host "  |                        CENTRAL DE COLETORES ZEBRA                           |" -ForegroundColor Cyan
+Write-Host "  |       Configuracao de Rede  -  Perfis StageNow  -  Carga USB (MTP)          |" -ForegroundColor DarkGray
+Write-Host "  +-----------------------------------------------------------------------------+" -ForegroundColor DarkCyan
+
+Write-Host ""
+Write-Host "  [*] [STATUS] Servidor local ativo e operando com sucesso." -ForegroundColor Green
+
+Write-Host ""
+Write-Host "  [!] [AVISO]  Mantenha esta janela aberta ou minimizada durante o uso." -ForegroundColor Yellow
+
+Write-Host ""
+Write-Host "  -------------------------------------------------------------------------------" -ForegroundColor DarkGray
+Write-Host ""
+
+# Abre o navegador
+Start-Process "http://localhost:$porta/"
+
+# Leitura protegida contra bloqueio de nuvem do OneDrive
+function Ler-BytesArquivo($caminho) {
+    try {
+        return [System.IO.File]::ReadAllBytes($caminho)
+    } catch {
+        $fs = New-Object System.IO.FileStream($caminho, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+        $buffer = New-Object byte[] $fs.Length
+        $fs.Read($buffer, 0, $fs.Length) | Out-Null
+        $fs.Close()
+        $fs.Dispose()
+        return $buffer
     }
+}
 
-    if ($null -eq $pastaDownloadMTP) {
-        throw "Nao foi possivel encontrar a pasta Download no MC3300x. Verifique se a tela esta desbloqueada e em modo Transferencia de Arquivo."
+function Enviar-Resposta($context, [byte[]]$bytes, $contentType, $statusCode = 200) {
+    try {
+        $context.Response.StatusCode = $statusCode
+        $context.Response.ContentType = $contentType
+        $context.Response.ContentLength64 = $bytes.Length
+        $context.Response.AddHeader("Access-Control-Allow-Origin", "*")
+        $context.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        $context.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type")
+        $context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+        $context.Response.OutputStream.Flush()
+    } catch {
+    } finally {
+        $context.Response.Close()
     }
+}
 
-    $origemShell = $shell.Namespace($origemPasta)
-    $itensOrigem = $origemShell.Items()
-
-    if ($itensOrigem.Count -eq 0) {
-        throw "A pasta arquivos_carga esta vazia."
+function Obter-MimeType($extensao) {
+    switch ($extensao.ToLower()) {
+        ".html" { return "text/html; charset=utf-8" }
+        ".htm"  { return "text/html; charset=utf-8" }
+        ".css"  { return "text/css; charset=utf-8" }
+        ".js"   { return "application/javascript; charset=utf-8" }
+        ".json" { return "application/json; charset=utf-8" }
+        ".png"  { return "image/png" }
+        ".jpg"  { return "image/jpeg" }
+        ".jpeg" { return "image/jpeg" }
+        ".ico"  { return "image/x-icon" }
+        ".svg"  { return "image/svg+xml" }
+        default { return "application/octet-stream" }
     }
-
-    # Copia todos os itens de uma vez (16 = Sim para todos, sem caixas de diálogo)
-    $pastaDownloadMTP.CopyHere($itensOrigem, 16)
-
-    # Pausa curta para iniciar a cópia via Shell
-    Start-Sleep -Seconds 2
-
-    return "$($itensOrigem.Count) arquivo(s) enviados para o MC3300x com sucesso!"
 }
 
 while ($listener.IsListening) {
-    $context = $listener.GetContext()
-    $request = $context.Request
-    $response = $context.Response
+    try {
+        $context = $listener.GetContext()
+    } catch {
+        break
+    }
 
-    # Configuração de CORS e Cabeçalhos
-    $response.AddHeader("Access-Control-Allow-Origin", "*")
-    $response.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    $response.AddHeader("Access-Control-Allow-Headers", "Content-Type")
+    $request = $context.Request
+    $urlPath = $request.Url.AbsolutePath
 
     if ($request.HttpMethod -eq "OPTIONS") {
-        $response.StatusCode = 200
-        $response.OutputStream.Close()
+        $context.Response.StatusCode = 200
+        $context.Response.AddHeader("Access-Control-Allow-Origin", "*")
+        $context.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        $context.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type")
+        $context.Response.Close()
         continue
     }
 
-    $caminho = $request.Url.LocalPath.TrimStart('/')
+    # 1. PÁGINA PRINCIPAL
+    if ($urlPath -eq "/" -or $urlPath -eq "/index.html") {
+        $caminhoIndex = Join-Path $pastaRaiz "index.html"
+        if (Test-Path $caminhoIndex) {
+            $bytes = Ler-BytesArquivo $caminhoIndex
+            Enviar-Resposta $context $bytes "text/html; charset=utf-8"
+        } else {
+            $msg = [System.Text.Encoding]::UTF8.GetBytes("<h2 style='font-family:sans-serif;color:#b71c1c;padding:30px;'>Erro: index.html nao encontrado.</h2>")
+            Enviar-Resposta $context $msg "text/html; charset=utf-8" 404
+        }
+        continue
+    }
 
-    # Rota para ENVIAR ARQUIVOS VIA MTP (Zebra MC3300x)
-    if ($request.HttpMethod -eq "POST" -and $caminho -eq "api/enviar-usb") {
+    # 2. LISTAR ARQUIVOS USB
+    if ($urlPath -eq "/api/listar-arquivos-usb") {
         try {
-            $origemArquivos = Join-Path $pasta "arquivos_carga"
+            $arquivos = Get-ChildItem -Path $pastaCarga -File | Select-Object -ExpandProperty Name
+            $arr = @($arquivos)
+            $json = @{ status = "ok"; arquivos = $arr } | ConvertTo-Json -Compress
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8"
+        } catch {
+            $json = @{ status = "erro"; mensagem = $_.Exception.Message } | ConvertTo-Json -Compress
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8" 500
+        }
+        continue
+    }
 
-            if (-not (Test-Path $origemArquivos)) {
-                New-Item -ItemType Directory -Path $origemArquivos | Out-Null
+    # 3. ENVIAR USB (CAMINHO EXATO: MC3300x\Divisão interna de armazenamento\Download)
+    if ($urlPath -eq "/api/enviar-usb" -and $request.HttpMethod -eq "POST") {
+        try {
+            Write-Host "  -> [USB] Iniciando verificacao MTP para MC3300x..." -ForegroundColor Cyan
+
+            # Obtém a lista de arquivos da pasta 'arquivos_carga'
+            $arquivosParaEnviar = @()
+            try {
+                if ($request.HasEntityBody) {
+                    $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
+                    $body = $reader.ReadToEnd()
+                    if (-not [string]::IsNullOrWhiteSpace($body)) {
+                        $payload = $body | ConvertFrom-Json
+                        if ($payload.arquivos) {
+                            $arquivosParaEnviar = @($payload.arquivos)
+                        }
+                    }
+                }
+            } catch {}
+
+            if ($arquivosParaEnviar.Count -eq 0) {
+                $todos = Get-ChildItem -Path $pastaCarga -File | Select-Object -ExpandProperty Name
+                $arquivosParaEnviar = @($todos)
             }
 
-            $mensagemSucesso = Copiar-ParaZebraMTP -origemPasta $origemArquivos
-
-            $response.StatusCode = 200
-            $response.ContentType = "application/json; charset=utf-8"
-            $msgBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok","mensagem":"' + $mensagemSucesso + '"}')
-            $response.ContentLength64 = $msgBytes.Length
-            $response.OutputStream.Write($msgBytes, 0, $msgBytes.Length)
-        } catch {
-            $response.StatusCode = 500
-            $erroLimpo = $_.Exception.Message.Replace('"', "'").Replace("`r`n", " ").Replace("`n", " ")
-            $erroBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"erro","erro":"' + $erroLimpo + '"}')
-            $response.ContentLength64 = $erroBytes.Length
-            $response.OutputStream.Write($erroBytes, 0, $erroBytes.Length)
-        }
-        $response.OutputStream.Close()
-        continue
-    }
-
-    # Rota para CRIAR ATALHO NA ÁREA DE TRABALHO
-    if ($request.HttpMethod -eq "POST" -and $caminho -eq "api/criar-atalho") {
-        try {
-            $desktopPath = [Environment]::GetFolderPath("Desktop")
-            $atalhoPath = Join-Path $desktopPath "Central de Coletores.lnk"
-            $alvoBat = Join-Path $pasta "iniciar_central.bat"
-            $iconePath = Join-Path $pasta "icone.ico"
-
-            $wshShell = New-Object -ComObject WScript.Shell
-            $shortcut = $wshShell.CreateShortcut($atalhoPath)
-            $shortcut.TargetPath = $alvoBat
-            $shortcut.WorkingDirectory = $pasta
-            $shortcut.Description = "Iniciar Central de Coletores"
-
-            if (Test-Path $iconePath -PathType Leaf) {
-                $shortcut.IconLocation = "$iconePath,0"
+            if ($arquivosParaEnviar.Count -eq 0) {
+                throw "A pasta 'arquivos_carga' esta vazia. Adicione os arquivos que deseja copiar."
             }
 
-            $shortcut.Save()
+            $shell = New-Object -ComObject Shell.Application
+            $meuComputador = $shell.Namespace(17) # 17 = Este Computador
 
-            $response.StatusCode = 200
-            $response.ContentType = "application/json; charset=utf-8"
-            $msgBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok"}')
-            $response.ContentLength64 = $msgBytes.Length
-            $response.OutputStream.Write($msgBytes, 0, $msgBytes.Length)
+            # 1. Localiza o dispositivo MC3300x
+            $coletor = $null
+            foreach ($item in $meuComputador.Items()) {
+                if ($item.Name -match "MC3300x|MC33|Zebra") {
+                    $coletor = $item
+                    break
+                }
+            }
+
+            if (-not $coletor) {
+                throw "Dispositivo 'MC3300x' nao encontrado em 'Este Computador'. Verifique se o cabo esta conectado, a tela DESBLOQUEADA e o modo USB configurado como 'Transferencia de arquivos'."
+            }
+
+            Write-Host "  -> [USB] Dispositivo encontrado: $($coletor.Name)" -ForegroundColor Green
+
+            # 2. Localiza a pasta 'Divisão interna de armazenamento'
+            $coletorFolder = $coletor.GetFolder
+            $armazenamento = $null
+            foreach ($sub in $coletorFolder.Items()) {
+                # Busca exata por 'Divisão interna de armazenamento' ou variações com/sem acento
+                if ($sub.Name -match "Divis|Armazenamento|Internal|compartilhado") {
+                    $armazenamento = $sub
+                    break
+                }
+            }
+
+            if (-not $armazenamento) {
+                # Se não achou por regex, lista na tela o nome real para diagnóstico
+                $nomesEncontrados = ($coletorFolder.Items() | ForEach-Object { $_.Name }) -join ", "
+                throw "Pasta 'Divisao interna de armazenamento' nao acessivel. Pastas visiveis no aparelho: [$nomesEncontrados]. Verifique se a tela esta desbloqueada."
+            }
+
+            Write-Host "  -> [USB] Armazenamento acessado: $($armazenamento.Name)" -ForegroundColor Green
+
+            # 3. Localiza a pasta 'Download'
+            $armazenamentoFolder = $armazenamento.GetFolder
+            $downloadFolder = $null
+            foreach ($sub in $armazenamentoFolder.Items()) {
+                if ($sub.Name -match "^Download$") {
+                    $downloadFolder = $sub.GetFolder
+                    break
+                }
+            }
+
+            if (-not $downloadFolder) {
+                throw "Pasta 'Download' nao encontrada dentro de '$($armazenamento.Name)'."
+            }
+
+            Write-Host "  -> [USB] Destino confirmado: $($coletor.Name)\$($armazenamento.Name)\$($downloadFolder.Title)" -ForegroundColor Green
+
+            # 4. Transfere os arquivos com confirmação
+            $qtdCopiada = 0
+            foreach ($nomeArq in $arquivosParaEnviar) {
+                $caminhoCompleto = Join-Path $pastaCarga $nomeArq
+                if (Test-Path $caminhoCompleto) {
+                    Write-Host "  -> [USB] Transferindo: $nomeArq ..." -ForegroundColor Yellow
+                    
+                    # 16 = FOF_SILENT (sem popup de confirmacao do explorer)
+                    $downloadFolder.CopyHere($caminhoCompleto, 16)
+                    
+                    # Pausa curta para permitir que o buffer MTP grave o arquivo no Android
+                    Start-Sleep -Milliseconds 600
+                    $qtdCopiada++
+                }
+            }
+
+            Write-Host "  -> [USB] Carga concluida com sucesso! Total: $qtdCopiada arquivo(s)" -ForegroundColor Green
+
+            $respostaJson = @{ status = "ok"; mensagem = "$qtdCopiada arquivo(s) copiado(s) para 'Download' com sucesso!" } | ConvertTo-Json -Compress
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($respostaJson)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8"
         } catch {
-            $response.StatusCode = 500
-            $erroBytes = [System.Text.Encoding]::UTF8.GetBytes('{"erro":"' + $_.Exception.Message + '"}')
-            $response.ContentLength64 = $erroBytes.Length
-            $response.OutputStream.Write($erroBytes, 0, $erroBytes.Length)
+            Write-Host "  -> [USB ERRO] $($_.Exception.Message)" -ForegroundColor Red
+            $erroMsg = $_.Exception.Message.Replace('"', '\"')
+            $respostaJson = '{"status":"erro","mensagem":"' + $erroMsg + '"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($respostaJson)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8" 500
         }
-        $response.OutputStream.Close()
         continue
     }
 
-    # Rota para SALVAR COLETORES VIA POST
-    if ($request.HttpMethod -eq "POST" -and ($caminho -eq "coletores.json" -or $caminho -eq "api/salvar")) {
+    # 4. CRIAR ATALHO
+    if ($urlPath -eq "/api/criar-atalho" -and $request.HttpMethod -eq "POST") {
         try {
+            $desktop = [System.Environment]::GetFolderPath("Desktop")
+            $atalhoPath = Join-Path $desktop "Central de Coletores.url"
+            $conteudo = "[InternetShortcut]`r`nURL=http://localhost:$porta/`r`nIconIndex=0`r`nIconFile=" + (Join-Path $pastaRaiz "icone.ico")
+            [System.IO.File]::WriteAllText($atalhoPath, $conteudo, [System.Text.Encoding]::UTF8)
+
+            $json = '{"status":"ok","mensagem":"Atalho criado na Area de Trabalho!"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8"
+        } catch {
+            $json = '{"status":"erro","mensagem":"' + $_.Exception.Message + '"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8" 500
+        }
+        continue
+    }
+
+    # 5. SALVAR COLETORES.JSON
+    if ($urlPath -eq "/coletores.json" -and $request.HttpMethod -eq "POST") {
+        try {
+            $caminhoArquivo = Join-Path $pastaRaiz "coletores.json"
             $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
-            $corpo = $reader.ReadToEnd()
-            $reader.Close()
+            $conteudoJson = $reader.ReadToEnd()
+            [System.IO.File]::WriteAllText($caminhoArquivo, $conteudoJson, [System.Text.Encoding]::UTF8)
 
-            $arquivoDestino = Join-Path $pasta "coletores.json"
-            [System.IO.File]::WriteAllText($arquivoDestino, $corpo, [System.Text.Encoding]::UTF8)
-
-            $response.StatusCode = 200
-            $response.ContentType = "application/json; charset=utf-8"
-            $msgBytes = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok"}')
-            $response.ContentLength64 = $msgBytes.Length
-            $response.OutputStream.Write($msgBytes, 0, $msgBytes.Length)
+            $json = '{"status":"ok"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8"
         } catch {
-            $response.StatusCode = 500
-            $erroBytes = [System.Text.Encoding]::UTF8.GetBytes('{"erro":"' + $_.Exception.Message + '"}')
-            $response.ContentLength64 = $erroBytes.Length
-            $response.OutputStream.Write($erroBytes, 0, $erroBytes.Length)
+            $json = '{"status":"erro","mensagem":"' + $_.Exception.Message + '"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8" 500
         }
-        $response.OutputStream.Close()
         continue
     }
 
-    # Entrega de arquivos estáticos (GET)
-    if ([string]::IsNullOrEmpty($caminho)) { $caminho = "index.html" }
-    $arquivo = Join-Path $pasta $caminho
+    # 6. ARQUIVOS ESTÁTICOS
+    $nomeArquivo = $urlPath.TrimStart('/')
+    $caminhoArquivoFisico = Join-Path $pastaRaiz $nomeArquivo
 
-    if (Test-Path $arquivo -PathType Leaf) {
-        $ext = [System.IO.Path]::GetExtension($arquivo).ToLower()
-        switch ($ext) {
-            ".html" { $response.ContentType = "text/html; charset=utf-8" }
-            ".json" { $response.ContentType = "application/json; charset=utf-8" }
-            ".js"   { $response.ContentType = "application/javascript" }
-            ".css"  { $response.ContentType = "text/css" }
-            ".ico"  { $response.ContentType = "image/x-icon" }
-            ".png"  { $response.ContentType = "image/png" }
-            default { $response.ContentType = "application/octet-stream" }
+    if (Test-Path $caminhoArquivoFisico -PathType Leaf) {
+        try {
+            $ext = [System.IO.Path]::GetExtension($caminhoArquivoFisico)
+            $bytes = Ler-BytesArquivo $caminhoArquivoFisico
+            Enviar-Resposta $context $bytes (Obter-MimeType $ext)
+        } catch {
+            $context.Response.StatusCode = 500
+            $context.Response.Close()
         }
-
-        $response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-        $conteudo = [System.IO.File]::ReadAllBytes($arquivo)
-        $response.ContentLength64 = $conteudo.Length
-        $response.OutputStream.Write($conteudo, 0, $conteudo.Length)
     } else {
-        $response.StatusCode = 404
-        $mensagem = [System.Text.Encoding]::UTF8.GetBytes("Arquivo nao encontrado")
-        $response.ContentLength64 = $mensagem.Length
-        $response.OutputStream.Write($mensagem, 0, $mensagem.Length)
+        $msg = [System.Text.Encoding]::UTF8.GetBytes("Arquivo nao encontrado: $nomeArquivo")
+        Enviar-Resposta $context $msg "text/plain; charset=utf-8" 404
     }
-    $response.OutputStream.Close()
 }
