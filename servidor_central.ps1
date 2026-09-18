@@ -154,34 +154,98 @@ while ($listener.IsListening) {
         }
         continue
     }
+# 2.5 UPLOAD DE ARQUIVOS POR PLANTA
+    if ($urlPath -eq "/api/upload-arquivos-planta" -and $request.HttpMethod -eq "POST") {
+        try {
+            $plantaNome = [System.Uri]::UnescapeDataString($request.Headers["X-Planta-Nome"])
+            $arquivoNome = [System.Uri]::UnescapeDataString($request.Headers["X-Arquivo-Nome"])
 
-    # 3. ENVIAR USB (CAMINHO EXATO: MC3300x\Divisão interna de armazenamento\Download)
+            if ([string]::IsNullOrWhiteSpace($plantaNome) -or [string]::IsNullOrWhiteSpace($arquivoNome)) {
+                throw "Dados de cabecalho incompletos."
+            }
+
+            $nomePastaLimpo = $plantaNome -replace '[\\/:*?"<>|]', '_'
+            $pastaDestino = Join-Path $pastaCarga $nomePastaLimpo.Trim()
+
+            if (-not (Test-Path $pastaDestino)) {
+                New-Item -ItemType Directory -Path $pastaDestino -Force | Out-Null
+            }
+
+            $caminhoArquivoDestino = Join-Path $pastaDestino $arquivoNome
+            $fileStream = New-Object System.IO.FileStream($caminhoArquivoDestino, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
+            $request.InputStream.CopyTo($fileStream)
+            $fileStream.Close()
+            $fileStream.Dispose()
+
+            Write-Host "  -> [UPLOAD] Arquivo '$arquivoNome' salvo na pasta '$nomePastaLimpo'." -ForegroundColor Green
+
+            $json = '{"status":"ok"}'
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8"
+        } catch {
+            Write-Host "  -> [UPLOAD ERRO] $($_.Exception.Message)" -ForegroundColor Red
+            $json = @{ status = "erro"; mensagem = $_.Exception.Message } | ConvertTo-Json -Compress
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+            Enviar-Resposta $context $bytes "application/json; charset=utf-8" 500
+        }
+        continue
+    }
+
+# 3. ENVIAR USB (COM SELEÇÃO AUTOMÁTICA POR PLANTA)
     if ($urlPath -eq "/api/enviar-usb" -and $request.HttpMethod -eq "POST") {
         try {
-            Write-Host "  -> [USB] Iniciando verificacao MTP para MC3300x..." -ForegroundColor Cyan
+            Write-Host "  -> [USB] Iniciando verificacao MTP..." -ForegroundColor Cyan
 
-            # Obtém a lista de arquivos da pasta 'arquivos_carga'
+            $plantaId = ""
             $arquivosParaEnviar = @()
-            try {
-                if ($request.HasEntityBody) {
-                    $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
-                    $body = $reader.ReadToEnd()
-                    if (-not [string]::IsNullOrWhiteSpace($body)) {
-                        $payload = $body | ConvertFrom-Json
-                        if ($payload.arquivos) {
-                            $arquivosParaEnviar = @($payload.arquivos)
-                        }
-                    }
-                }
-            } catch {}
 
+            if ($request.HasEntityBody) {
+                $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
+                $body = $reader.ReadToEnd()
+                if (-not [string]::IsNullOrWhiteSpace($body)) {
+                    $payload = $body | ConvertFrom-Json
+                    if ($payload.plantaId) { $plantaId = $payload.plantaId }
+                    if ($payload.arquivos) { $arquivosParaEnviar = @($payload.arquivos) }
+                }
+            }
+
+            # Leitura do nome da planta enviado pela requisição
+            $nomePastaPlanta = ""
+            if ($payload.plantaNome) {
+                # Remove caracteres proibidos pelo sistema de ficheiros do Windows
+                $nomePastaPlanta = $payload.plantaNome -replace '[\\/:*?"<>|]', '_'
+                $nomePastaPlanta = $nomePastaPlanta.Trim()
+            }
+
+            # Define a subpasta com o nome real e legível da Planta
+            $pastaOrigemFinal = $pastaCarga
+            if (-not [string]::IsNullOrWhiteSpace($nomePastaPlanta)) {
+                $pastaPlanta = Join-Path $pastaCarga $nomePastaPlanta
+                
+                # Se a subpasta com o nome da planta não existir, cria-a com esse mesmo nome
+                if (-not (Test-Path $pastaPlanta)) {
+                    New-Item -ItemType Directory -Path $pastaPlanta -Force | Out-Null
+                    Write-Host "  -> [USB] Pasta criada: $pastaPlanta" -ForegroundColor Cyan
+                }
+
+                # Se houver ficheiros na subpasta da planta, utiliza-a
+                $arquivosPlanta = Get-ChildItem -Path $pastaPlanta -File
+                if ($arquivosPlanta.Count -gt 0) {
+                    $pastaOrigemFinal = $pastaPlanta
+                    Write-Host "  -> [USB] Utilizando ficheiros da pasta: $nomePastaPlanta" -ForegroundColor Green
+                } else {
+                    Write-Host "  -> [USB] A pasta '$nomePastaPlanta' está vazia. A usar a raiz como contingência." -ForegroundColor Yellow
+                }
+            }
+
+            # Se nenhuma lista foi enviada, pega todos os arquivos da pasta escolhida
             if ($arquivosParaEnviar.Count -eq 0) {
-                $todos = Get-ChildItem -Path $pastaCarga -File | Select-Object -ExpandProperty Name
+                $todos = Get-ChildItem -Path $pastaOrigemFinal -File | Select-Object -ExpandProperty Name
                 $arquivosParaEnviar = @($todos)
             }
 
             if ($arquivosParaEnviar.Count -eq 0) {
-                throw "A pasta 'arquivos_carga' esta vazia. Adicione os arquivos que deseja copiar."
+                throw "Nenhum arquivo encontrado para envio na pasta: $($pastaOrigemFinal)."
             }
 
             $shell = New-Object -ComObject Shell.Application
@@ -196,8 +260,18 @@ while ($listener.IsListening) {
                 }
             }
 
+            # Fallback: caso nao localize por nome direto, tenta pelo caminho 'Dispositivo USB MTP'
             if (-not $coletor) {
-                throw "Dispositivo 'MC3300x' nao encontrado em 'Este Computador'. Verifique se o cabo esta conectado, a tela DESBLOQUEADA e o modo USB configurado como 'Transferencia de arquivos'."
+                foreach ($item in $meuComputador.Items()) {
+                    if ($item.Name -match "Dispositivo USB MTP") {
+                        $coletor = $item
+                        break
+                    }
+                }
+            }
+
+            if (-not $coletor) {
+                throw "Dispositivo 'MC3300x' ou 'Dispositivo USB MTP' nao encontrado em 'Este Computador'. Verifique se o cabo esta conectado, a tela DESBLOQUEADA e o modo USB configurado como 'Transferencia de arquivos'."
             }
 
             Write-Host "  -> [USB] Dispositivo encontrado: $($coletor.Name)" -ForegroundColor Green
@@ -240,14 +314,10 @@ while ($listener.IsListening) {
             # 4. Transfere os arquivos com confirmação
             $qtdCopiada = 0
             foreach ($nomeArq in $arquivosParaEnviar) {
-                $caminhoCompleto = Join-Path $pastaCarga $nomeArq
+                $caminhoCompleto = Join-Path $pastaOrigemFinal $nomeArq
                 if (Test-Path $caminhoCompleto) {
                     Write-Host "  -> [USB] Transferindo: $nomeArq ..." -ForegroundColor Yellow
-                    
-                    # 16 = FOF_SILENT (sem popup de confirmacao do explorer)
                     $downloadFolder.CopyHere($caminhoCompleto, 16)
-                    
-                    # Pausa curta para permitir que o buffer MTP grave o arquivo no Android
                     Start-Sleep -Milliseconds 600
                     $qtdCopiada++
                 }

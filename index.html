@@ -1021,6 +1021,33 @@
         </div>
     </div>
 </div>
+<!-- MODAL: Upload de Arquivos da Planta -->
+<div id="modalUploadPlanta" class="modal-overlay hidden">
+    <div class="modal-content modal-content-sm">
+        <div class="modal-header">
+            <h3 style="font-size:18px;">📦 Arquivos da Planta: <span id="lblUploadNomePlanta" style="color:#7c3aed;"></span></h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalUploadPlanta()">✖</button>
+        </div>
+
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
+            Selecione os arquivos (aplicativos <strong>.apk</strong>, configurações <strong>.xml</strong>, etc.) para os coletores desta unidade.
+        </p>
+
+        <div style="border:2px dashed var(--border-color); padding:20px; border-radius:12px; text-align:center; background:var(--bg-panel); margin-bottom:15px;">
+            <input type="file" id="inputArquivosPlanta" multiple style="display:none;" onchange="atualizarListaArquivosSelecionados()">
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('inputArquivosPlanta').click()">
+                📂 Selecionar Arquivos
+            </button>
+            <div id="listaArquivosPrevia" style="margin-top:12px; font-size:12px; text-align:left; max-height:120px; overflow-y:auto;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="fecharModalUploadPlanta()">Pular / Fazer Depois</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnConfirmarUpload" onclick="enviarArquivosPlantaServidor()">📤 Enviar Arquivos</button>
+        </div>
+        <div id="msgStatusUpload" class="msg hidden" style="margin-top:10px;"></div>
+    </div>
+</div>
 
 <script>
     let dados = { coletores: [], plantas: [], atalhos: [] };
@@ -1799,9 +1826,15 @@
     // ==========================================
     //  ENVIO VIA USB (MTP) - Mensagem abaixo do botão
     // ==========================================
-    async function enviarArquivosUSB() {
+async function enviarArquivosUSB() {
+        const coletor = encontrarColetor(document.getElementById('dadosExibicao').dataset.serie);
+        const planta = coletor ? encontrarPlanta(coletor.plantaId) : null;
+        
+        // Obtém o nome real da planta (ex: "Sorocaba")
+        const nomePlanta = planta ? planta.nome : '';
+
         const confirmou = await pedirConfirmacao(
-            'Deseja transferir todos os arquivos diretamente para o coletor MC3300x?',
+            `Deseja transferir os arquivos específicos da planta "${nomePlanta || 'Padrão'}" para o coletor?`,
             'Carga via USB (MTP)',
             'Transferir Arquivos',
             '📥',
@@ -1809,30 +1842,28 @@
         );
         if (!confirmou) return;
 
-        mostrarMensagemStatusUSB('⏳ Transferindo arquivos para Este Computador\\MC3300x... Aguarde.', 'info');
+        mostrarMensagemStatusUSB('⏳ Verificando pasta da planta e transferindo via USB... Aguarde.', 'info');
 
         try {
             const response = await fetch('/api/enviar-usb', { 
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    plantaNome: nomePlanta,
+                    plantaId: coletor ? coletor.plantaId : '' 
+                }) 
             });
             
-            const rawText = await response.text();
-            let json = {};
-            try {
-                json = JSON.parse(rawText);
-            } catch (e) {
-                json = { status: response.ok ? 'ok' : 'erro', mensagem: rawText };
-            }
+            const json = await response.json();
 
             if (response.ok && json.status === 'ok') {
-                mostrarMensagemStatusUSB(`✅ Sucesso: ${json.mensagem || 'Arquivos enviados com sucesso!'}`, 'success');
+                mostrarMensagemStatusUSB(`✅ Sucesso: ${json.mensagem}`, 'success');
             } else {
-                mostrarMensagemStatusUSB(`⚠️ Erro ao transferir: ${json.erro || json.mensagem || 'Falha na cópia'}`, 'error');
+                mostrarMensagemStatusUSB(`⚠️ ${json.mensagem || 'Falha na cópia'}`, 'error');
             }
         } catch (e) {
             console.error(e);
-            mostrarMensagemStatusUSB('⚠️ A cópia pode ter sido concluída, mas a resposta demorou. Verifique a pasta Download do coletor.', 'warning');
+            mostrarMensagemStatusUSB('⚠️ Falha de comunicação com o servidor local.', 'error');
         }
     }
 
@@ -2069,7 +2100,7 @@
         });
     }
 
-    async function salvarPlanta(event) {
+async function salvarPlanta(event) {
         event.preventDefault();
         const nome = document.getElementById('pNome').value.trim();
         const gateway = document.getElementById('pGateway').value.trim();
@@ -2097,6 +2128,9 @@
         popularSelectPlantas(novaPlanta.id);
         renderizarListaPlantas();
         fecharModalPlantas();
+
+        // Abre a janela de upload automaticamente para a nova planta cadastrada
+        abrirModalUploadPlanta(novaPlanta.nome);
     }
 
     async function excluirPlanta(id) {
@@ -2271,6 +2305,83 @@
             link.download = 'Central_Coletores.url';
             link.click();
             mostrarMensagem('Atalho gerado! Arraste o arquivo baixado para a Área de Trabalho.', 'info');
+        }
+    }
+    let plantaParaUploadAtual = null;
+
+    function abrirModalUploadPlanta(nomePlanta) {
+        plantaParaUploadAtual = nomePlanta;
+        document.getElementById('lblUploadNomePlanta').textContent = nomePlanta;
+        document.getElementById('inputArquivosPlanta').value = '';
+        document.getElementById('listaArquivosPrevia').innerHTML = '<span style="color:var(--text-muted);">Nenhum arquivo selecionado.</span>';
+        document.getElementById('msgStatusUpload').classList.add('hidden');
+        document.getElementById('modalUploadPlanta').classList.remove('hidden');
+    }
+
+    function fecharModalUploadPlanta() {
+        document.getElementById('modalUploadPlanta').classList.add('hidden');
+        plantaParaUploadAtual = null;
+    }
+
+    function atualizarListaArquivosSelecionados() {
+        const input = document.getElementById('inputArquivosPlanta');
+        const container = document.getElementById('listaArquivosPrevia');
+        if (input.files.length === 0) {
+            container.innerHTML = '<span style="color:var(--text-muted);">Nenhum arquivo selecionado.</span>';
+            return;
+        }
+
+        let html = '<strong>Arquivos selecionados:</strong><ul style="padding-left:18px; margin-top:5px;">';
+        for (let i = 0; i < input.files.length; i++) {
+            html += `<li>${input.files[i].name} (${(input.files[i].size / 1024).toFixed(1)} KB)</li>`;
+        }
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    async function enviarArquivosPlantaServidor() {
+        const input = document.getElementById('inputArquivosPlanta');
+        const msg = document.getElementById('msgStatusUpload');
+        const btn = document.getElementById('btnConfirmarUpload');
+
+        if (!input.files || input.files.length === 0) {
+            alert('Por favor, selecione ao menos um arquivo antes de enviar.');
+            return;
+        }
+
+        btn.disabled = true;
+        msg.className = 'msg msg-info';
+        msg.textContent = 'Enviando arquivos... Aguarde.';
+        msg.classList.remove('hidden');
+
+        try {
+            for (let i = 0; i < input.files.length; i++) {
+                const arquivo = input.files[i];
+                msg.textContent = `Enviando (${i + 1}/${input.files.length}): ${arquivo.name}...`;
+
+                const resp = await fetch('/api/upload-arquivos-planta', {
+                    method: 'POST',
+                    headers: {
+                        'X-Planta-Nome': encodeURIComponent(plantaParaUploadAtual),
+                        'X-Arquivo-Nome': encodeURIComponent(arquivo.name)
+                    },
+                    body: arquivo
+                });
+
+                if (!resp.ok) throw new Error(`Falha ao enviar ${arquivo.name}`);
+            }
+
+            msg.className = 'msg msg-success';
+            msg.textContent = '✅ Todos os arquivos foram salvos na pasta da planta com sucesso!';
+            setTimeout(() => {
+                fecharModalUploadPlanta();
+            }, 1800);
+        } catch (e) {
+            console.error(e);
+            msg.className = 'msg msg-error';
+            msg.textContent = 'Erro ao enviar arquivos: ' + e.message;
+        } finally {
+            btn.disabled = false;
         }
     }
 </script>
